@@ -2,7 +2,7 @@
 
 ## Getting started
 
-1. Template is working with Node.js 22 and larger. First of all make sure that your Node.js version is capatible with requirements.
+1. App is working with Node.js 22 and larger. First of all make sure that your Node.js version is capatible with requirements.
 
 2. Install dependencies using `pnpm` as package manager:
 
@@ -74,4 +74,4 @@ Author - [Kyrylo Savieliev](https://github.com/OneLiL05)
 
 ## License
 
-`awesome-backend-starter` is [MIT licensed](https://github.com/OneLiL05/awesome-backend-starter/blob/main/LICENSE)
+`Inkly Backend` is [MIT licensed](https://github.com/OneLiL05/awesome-backend-starter/blob/main/LICENSE)
