@@ -22,8 +22,6 @@ export const registerAuthRoutes = async (app: AppInstance): Promise<void> => {
 
 				const response = await this.diContainer.cradle.auth.handler(req)
 
-				reply.status(response.status)
-
 				for (const [key, value] of response.headers.entries()) {
 					reply.header(key, value)
 				}

@@ -1,23 +1,15 @@
-import { relations, sql } from 'drizzle-orm'
+import { relations } from 'drizzle-orm'
 import { pgTable } from 'drizzle-orm/pg-core'
-import { sessionTable } from './session.js'
+import { baseTableAttrs } from '../utils.js'
 import { accountTable } from './account.js'
+import { sessionTable } from './session.js'
 
 export const userTable = pgTable('user', (t) => ({
-	id: t
-		.uuid('id')
-		.default(sql`uuidv7()`)
-		.primaryKey(),
+	...baseTableAttrs,
 	name: t.text().notNull(),
 	email: t.text().notNull().unique(),
 	emailVerified: t.boolean().default(false).notNull(),
 	image: t.text(),
-	createdAt: t.timestamp({ withTimezone: true }).defaultNow().notNull(),
-	updatedAt: t
-		.timestamp({ withTimezone: true })
-		.defaultNow()
-		.$onUpdate(() => new Date())
-		.notNull(),
 	username: t.text().unique(),
 	displayUsername: t.text(),
 	role: t.text(),

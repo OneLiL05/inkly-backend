@@ -1,14 +1,12 @@
-import { relations, sql } from 'drizzle-orm'
+import { relations } from 'drizzle-orm'
 import { index, pgTable } from 'drizzle-orm/pg-core'
+import { baseTableAttrs } from '../utils.js'
 import { userTable } from './user.js'
 
 export const accountTable = pgTable(
 	'account',
 	(t) => ({
-		id: t
-			.uuid('id')
-			.default(sql`uuidv7()`)
-			.primaryKey(),
+		...baseTableAttrs,
 		accountId: t.text().notNull(),
 		providerId: t.text().notNull(),
 		userId: t
@@ -22,13 +20,8 @@ export const accountTable = pgTable(
 		refreshTokenExpiresAt: t.timestamp({ withTimezone: true }),
 		scope: t.text(),
 		password: t.text(),
-		createdAt: t.timestamp({ withTimezone: true }).defaultNow().notNull(),
-		updatedAt: t
-			.timestamp()
-			.$onUpdate(() => new Date())
-			.notNull(),
 	}),
-	(table) => [index('account_userId_idx').on(table.userId)],
+	(table) => [index('account_user_id_idx').on(table.userId)],
 )
 
 export const accountRelations = relations(accountTable, ({ one }) => ({
