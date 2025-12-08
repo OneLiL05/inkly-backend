@@ -1,15 +1,16 @@
 import * as schema from '@/db/schema/index.js'
 import { betterAuth, nodeENV } from 'better-auth'
+import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import {
 	admin,
 	haveIBeenPwned,
 	lastLoginMethod,
 	multiSession,
-	username,
 	openAPI,
+	organization,
+	username,
 } from 'better-auth/plugins'
 import type { AuthInjectableDependencies } from '../types/index.js'
-import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 
 export const initBetterAuth = (deps: AuthInjectableDependencies) => {
 	const { db, secondaryStorage, passwordService } = deps
@@ -58,13 +59,14 @@ export const initBetterAuth = (deps: AuthInjectableDependencies) => {
 			admin({ adminRoles: ['admin', 'employee'] }),
 			multiSession(),
 			lastLoginMethod({
-				cookieName: 'proofly.last_used_login_method',
+				cookieName: 'inkly.last_used_login_method',
 				storeInDatabase: true,
 			}),
 			haveIBeenPwned({
 				customPasswordCompromisedMessage:
 					'Please choose a more secure password',
 			}),
+			organization(),
 			openAPI({ disableDefaultReference: true }),
 		],
 		experimental: {

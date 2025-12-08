@@ -1,30 +1,23 @@
-import { relations, sql } from 'drizzle-orm'
+import { relations } from 'drizzle-orm'
 import { index, pgTable } from 'drizzle-orm/pg-core'
+import { baseTableAttrs } from '../utils.js'
 import { userTable } from './user.js'
 
 export const sessionTable = pgTable(
 	'session',
 	(t) => ({
-		id: t
-			.uuid('id')
-			.default(sql`uuidv7()`)
-			.primaryKey(),
+		...baseTableAttrs,
 		expiresAt: t.timestamp({ withTimezone: true }).notNull(),
 		token: t.text().notNull().unique(),
-		createdAt: t.timestamp({ withTimezone: true }).defaultNow().notNull(),
-		updatedAt: t
-			.timestamp({ withTimezone: true })
-			.$onUpdate(() => new Date())
-			.notNull(),
 		ipAddress: t.text(),
 		userAgent: t.text(),
 		userId: t
-			.uuid('user_id')
+			.uuid()
 			.notNull()
 			.references(() => userTable.id, { onDelete: 'cascade' }),
 		impersonatedBy: t.text(),
 	}),
-	(table) => [index('session_userId_idx').on(table.userId)],
+	(t) => [index('session_user_id_idx').on(t.userId)],
 )
 
 export const sessionTableRelations = relations(sessionTable, ({ one }) => ({

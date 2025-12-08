@@ -1,7 +1,10 @@
-import { integer, timestamp } from 'drizzle-orm/pg-core'
+import { sql } from 'drizzle-orm'
+import { uuid, timestamp } from 'drizzle-orm/pg-core'
+
+const pgUuidv7 = () => sql`uuidv7()`
 
 const baseTableAttrs = {
-	id: integer().primaryKey().generatedAlwaysAsIdentity(),
+	id: uuid().primaryKey().default(pgUuidv7()),
 	createdAt: timestamp({ withTimezone: true, mode: 'date' })
 		.notNull()
 		.defaultNow(),
@@ -11,4 +14,4 @@ const baseTableAttrs = {
 		.$onUpdateFn(() => new Date()),
 }
 
-export { baseTableAttrs }
+export { baseTableAttrs, pgUuidv7 }
