@@ -17,11 +17,10 @@ export const userTable = pgTable('user', (t) => ({
 	banReason: t.text(),
 	banExpires: t.timestamp({ withTimezone: true }),
 	lastLoginMethod: t.text(),
-	fullName: t.text().notNull(),
 	locale: t.text().default('en'),
 }))
 
 export const userTableRelations = relations(userTable, ({ many }) => ({
-	sessions: many(sessionTable),
-	accounts: many(accountTable),
+	sessionTable: many(sessionTable),
+	accountTable: many(accountTable),
 }))

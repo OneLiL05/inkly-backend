@@ -20,13 +20,13 @@ export const memberTable = pgTable('member', (t) => ({
 }))
 
 export const memberTableRelations = relations(memberTable, ({ one, many }) => ({
-	organization: one(organizationTable, {
+	organizationTable: one(organizationTable, {
 		fields: [memberTable.organizationId],
 		references: [organizationTable.id],
 	}),
-	user: one(userTable, {
+	userTable: one(userTable, {
 		fields: [memberTable.userId],
 		references: [userTable.id],
 	}),
-	comments: many(commentTable),
+	commentTable: many(commentTable),
 }))

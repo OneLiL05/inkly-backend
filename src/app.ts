@@ -141,6 +141,8 @@ export class App {
 			hook: 'preHandler',
 		})
 
+		this.app.decorateRequest('userId', null)
+
 		await this.app.register(fastifyRateLimit, {
 			max: 100,
 			ban: 150,

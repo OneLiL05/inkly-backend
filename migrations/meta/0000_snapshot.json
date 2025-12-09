@@ -1,5 +1,5 @@
 {
-  "id": "f6416e03-1263-481d-921c-911800d696b4",
+  "id": "2a24c873-f4ef-4f1a-bf4e-7b5a88cd093c",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -1229,12 +1229,6 @@
           "type": "text",
           "primaryKey": false,
           "notNull": false
-        },
-        "full_name": {
-          "name": "full_name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
         },
         "locale": {
           "name": "locale",

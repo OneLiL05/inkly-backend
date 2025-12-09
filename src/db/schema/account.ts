@@ -25,7 +25,7 @@ export const accountTable = pgTable(
 )
 
 export const accountRelations = relations(accountTable, ({ one }) => ({
-	user: one(userTable, {
+	userTable: one(userTable, {
 		fields: [accountTable.userId],
 		references: [userTable.id],
 	}),

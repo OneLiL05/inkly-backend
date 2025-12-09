@@ -140,7 +140,6 @@ CREATE TABLE "user" (
 	"ban_reason" text,
 	"ban_expires" timestamp with time zone,
 	"last_login_method" text,
-	"full_name" text NOT NULL,
 	"locale" text DEFAULT 'en',
 	CONSTRAINT "user_email_unique" UNIQUE("email"),
 	CONSTRAINT "user_username_unique" UNIQUE("username")

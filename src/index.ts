@@ -17,3 +17,9 @@ const bootstrap = async () => {
 }
 
 void bootstrap()
+
+declare module 'fastify' {
+	interface FastifyRequest {
+		userId: string | null
+	}
+}

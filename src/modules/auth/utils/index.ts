@@ -3,6 +3,7 @@ import { betterAuth, nodeENV } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import {
 	admin,
+	createAuthMiddleware,
 	haveIBeenPwned,
 	lastLoginMethod,
 	multiSession,
@@ -15,28 +16,30 @@ import type { AuthInjectableDependencies } from '../types/index.js'
 export const initBetterAuth = (deps: AuthInjectableDependencies) => {
 	const { db, secondaryStorage, passwordService } = deps
 
-	const authSchema = {
-		account: schema.accountTable,
-		session: schema.sessionTable,
-		user: schema.userTable,
-		verification: schema.verificationTable,
-	}
-
 	return betterAuth({
-		database: drizzleAdapter(db, { provider: 'pg', schema: authSchema }),
+		database: drizzleAdapter(db.client, {
+			provider: 'pg',
+			schema,
+		}),
 		secondaryStorage,
 		user: {
+			modelName: 'userTable',
 			additionalFields: {
-				fullName: {
-					type: 'string',
-					required: true,
-				},
 				locale: {
 					type: 'string',
 					required: false,
 					defaultValue: 'en',
 				},
 			},
+		},
+		account: {
+			modelName: 'accountTable',
+		},
+		session: {
+			modelName: 'sessionTable',
+		},
+		verification: {
+			modelName: 'verificationTokenTable',
 		},
 		emailAndPassword: {
 			enabled: true,
@@ -53,10 +56,11 @@ export const initBetterAuth = (deps: AuthInjectableDependencies) => {
 			database: {
 				generateId: 'uuid',
 			},
+			disableOriginCheck: nodeENV !== 'production',
 		},
 		plugins: [
 			username(),
-			admin({ adminRoles: ['admin', 'employee'] }),
+			admin(),
 			multiSession(),
 			lastLoginMethod({
 				cookieName: 'inkly.last_used_login_method',
@@ -66,9 +70,44 @@ export const initBetterAuth = (deps: AuthInjectableDependencies) => {
 				customPasswordCompromisedMessage:
 					'Please choose a more secure password',
 			}),
-			organization(),
+			organization({
+				schema: {
+					organization: { modelName: 'organizationTable' },
+					member: { modelName: 'memberTable' },
+					invitation: { modelName: 'invitationTable' },
+				},
+			}),
 			openAPI({ disableDefaultReference: true }),
 		],
+		hooks: {
+			after: createAuthMiddleware(async (ctx) => {
+				if (ctx.path.startsWith('/sign-up')) {
+					const createdUser = ctx.context.newSession
+
+					const userCount = await ctx.context.adapter.count({
+						model: 'userTable',
+					})
+
+					if (userCount === 1 && createdUser) {
+						await ctx.context.adapter.update({
+							model: 'userTable',
+							where: [{ value: createdUser.user.id, field: 'id' }],
+							update: { role: 'admin' },
+						})
+
+						return ctx.json({
+							// @ts-expect-error assume that token exists here
+							token: ctx.context.returned?.token,
+							user: {
+								// @ts-expect-error assume that user exists here
+								...ctx.context.returned?.user,
+								role: 'admin',
+							},
+						})
+					}
+				}
+			}),
+		},
 		experimental: {
 			joins: true,
 		},

@@ -21,7 +21,7 @@ export const sessionTable = pgTable(
 )
 
 export const sessionTableRelations = relations(sessionTable, ({ one }) => ({
-	user: one(userTable, {
+	userTable: one(userTable, {
 		fields: [sessionTable.userId],
 		references: [userTable.id],
 	}),
