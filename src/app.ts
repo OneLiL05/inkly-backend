@@ -74,6 +74,7 @@ export class App {
 
 		await this.app.register(scalarApiReference, {
 			routePrefix: '/api',
+			logLevel: 'silent',
 			configuration: {
 				theme: 'deepSpace',
 				sources: [
@@ -91,17 +92,13 @@ export class App {
 		this.app.setErrorHandler((error, request, reply) => {
 			if (hasZodFastifySchemaValidationErrors(error)) {
 				const errObj = {
-					success: false,
-					data: null,
-					error: {
-						error: 'Response Validation Error',
-						message: "Request doesn't match the schema",
-						status: 400,
-						details: {
-							issues: error.validation,
-							method: request.method,
-							url: request.url,
-						},
+					error: 'Response Validation Error',
+					message: "Request doesn't match the schema",
+					status: 400,
+					details: {
+						issues: error.validation,
+						method: request.method,
+						url: request.url,
 					},
 				} satisfies FailureResponse
 
@@ -110,17 +107,13 @@ export class App {
 
 			if (isResponseSerializationError(error)) {
 				const errObj = {
-					success: false,
-					data: null,
-					error: {
-						error: 'Response Serialization Error',
-						message: "Response doesn't match the schema",
-						status: 500,
-						details: {
-							issues: error.cause.issues,
-							method: request.method,
-							url: request.url,
-						},
+					error: 'Response Serialization Error',
+					message: "Response doesn't match the schema",
+					status: 500,
+					details: {
+						issues: error.cause.issues,
+						method: request.method,
+						url: request.url,
 					},
 				} satisfies FailureResponse
 

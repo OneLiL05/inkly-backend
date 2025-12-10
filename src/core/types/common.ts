@@ -39,12 +39,7 @@ interface SuccessResponse<T> {
 	error: null
 }
 
-interface FailureResponse {
-	success: false
-	data: null
-	message?: string
-	error: HttpError | ValidationError
-}
+type FailureResponse = HttpError | ValidationError
 
 type BaseResponse<T> = SuccessResponse<T> | FailureResponse
 
