@@ -12,6 +12,12 @@ import {
 	username,
 } from 'better-auth/plugins'
 import type { AuthInjectableDependencies } from '../types/index.js'
+import {
+	ac,
+	admin as adminRole,
+	member,
+	owner,
+} from '@/core/permissions/org.permissions.js'
 
 export const initBetterAuth = (deps: AuthInjectableDependencies) => {
 	const { db, secondaryStorage, passwordService } = deps
@@ -71,6 +77,12 @@ export const initBetterAuth = (deps: AuthInjectableDependencies) => {
 					'Please choose a more secure password',
 			}),
 			organization({
+				ac,
+				roles: {
+					owner,
+					admin: adminRole,
+					member,
+				},
 				schema: {
 					organization: { modelName: 'organizationTable' },
 					member: { modelName: 'memberTable' },
