@@ -17,7 +17,7 @@ export class EntityRepository<
 	ID extends string | number,
 > implements Repository<Entity, ID>
 {
-	private readonly db: DatabaseClient
+	protected readonly db: DatabaseClient
 	private readonly table: EntityTable<ID>
 
 	constructor({ db, table }: EntityRepositoryDependencies<ID>) {

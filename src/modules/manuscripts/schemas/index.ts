@@ -1,36 +1,55 @@
 import z from 'zod'
+import { MANUSCRIPT_STATUS, PUBLICATION_TYPE } from '../constants/index.js'
 
-const ManuscriptModelSchema = z.object({
+const ManuscriptModelSchema = z.strictObject({
 	id: z.uuidv7().describe('Unique identifier of the manuscript'),
 	createdAt: z.date().describe('Creation timestamp of the manuscript'),
 	updatedAt: z.date().describe('Last update timestamp of the manuscript'),
 	deadlineAt: z.date().nullable().describe('Deadline of the manuscript'),
 	name: z.string().min(5).max(100).describe('Name of the manuscript'),
-	description: z.string().optional(),
-	status: z.string(),
-	publicationType: z.string(),
-	organizationId: z.uuidv7(),
+	description: z.string().optional().describe('Description of the manuscript'),
+	status: z
+		.enum(Object.values(MANUSCRIPT_STATUS))
+		.describe('Status of the manuscript'),
+	publicationType: z
+		.enum(Object.values(PUBLICATION_TYPE))
+		.describe('Publication type of the manuscript'),
+	language: z
+		.string()
+		.min(2)
+		.max(5)
+		.describe('Language code of the manuscript'),
+	organizationId: z
+		.uuidv7()
+		.describe('Organization identifier associated with the manuscript'),
 })
 
-const GetManuscriptParamsSchema = z.object({
+const GetManuscriptParamsSchema = z.strictObject({
 	id: z.uuidv7().describe('Identifier of the manuscript'),
 })
 
-const CreateManuscriptSchema = z.object({
-	name: z.string().min(5).max(100),
-	description: z.string().optional(),
-	status: z.string(),
-	publicationType: z.string(),
-	deadlineAt: z.coerce.date(),
-	organizationId: z.uuidv7(),
+const CreateManuscriptSchema = ManuscriptModelSchema.pick({
+	deadlineAt: true,
+	name: true,
+	description: true,
+	status: true,
+	publicationType: true,
+	language: true,
+	organizationId: true,
 })
+
+const UpdateManuscriptSchema = CreateManuscriptSchema.omit({
+	organizationId: true,
+}).partial()
 
 type CreateManuscript = z.infer<typeof CreateManuscriptSchema>
 type GetManuscript = z.infer<typeof GetManuscriptParamsSchema>
+type UpdateManuscript = z.infer<typeof UpdateManuscriptSchema>
 
 export {
 	CreateManuscriptSchema,
 	GetManuscriptParamsSchema,
 	ManuscriptModelSchema,
+	UpdateManuscriptSchema,
 }
-export type { CreateManuscript, GetManuscript }
+export type { CreateManuscript, GetManuscript, UpdateManuscript }

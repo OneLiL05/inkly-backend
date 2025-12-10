@@ -47,7 +47,6 @@ export type {
 	AppInstance,
 	BaseResponse,
 	FailureResponse,
-	HttpError,
 	ValidationError,
 	SuccessResponse,
 	Repository,

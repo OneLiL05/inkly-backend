@@ -15,4 +15,18 @@ class NotFoundError extends HttpError {
 	}
 }
 
-export { HttpError, NotFoundError }
+class ConflictError extends HttpError {
+	constructor(message: string) {
+		super(409, message)
+		this.name = 'CONFLICT_ERROR'
+	}
+}
+
+class InternalServerError extends HttpError {
+	constructor() {
+		super(500, 'An unexpected error occurred on the server')
+		this.name = 'INTERNAL_SERVER_ERROR'
+	}
+}
+
+export { HttpError, NotFoundError, InternalServerError, ConflictError }
