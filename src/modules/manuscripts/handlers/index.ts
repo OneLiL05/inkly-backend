@@ -1,10 +1,10 @@
 import type { FastifyReply, FastifyRequest } from 'fastify'
+import { ManuscriptNotFoundError } from '../errors/index.js'
 import type {
 	CreateManuscript,
 	GetManuscript,
 	UpdateManuscript,
 } from '../schemas/index.js'
-import { ManuscriptNotFoundError } from '../errors/index.js'
 
 export const getManuscript = async (
 	request: FastifyRequest<{ Params: GetManuscript }>,
@@ -61,23 +61,21 @@ export const updateManuscript = async (
 	const { id } = request.params
 	const { manuscriptsRepository, logger } = request.diScope.cradle
 
-	const manuscript = await manuscriptsRepository.findById(id)
+	const exists = await manuscriptsRepository.existsById(id)
 
-	const result = manuscript.toResult(new ManuscriptNotFoundError(id))
+	if (!exists) {
+		const error = new ManuscriptNotFoundError(id)
 
-	if (result.isErr()) {
 		logger.warn(`Manuscript with id '${id}' not found`)
 
-		return reply
-			.status(result.error.code)
-			.send({ message: result.error.message })
+		return reply.status(error.code).send({ message: error.message })
 	}
 
 	await manuscriptsRepository.updateById(id, request.body)
 
 	logger.info(`Manuscript with id '${id}' updated`)
 
-	return reply.status(200).send({ ...result.value, ...request.body })
+	return reply.status(204).send()
 }
 
 export const deleteManuscript = async (
@@ -87,16 +85,14 @@ export const deleteManuscript = async (
 	const { id } = request.params
 	const { manuscriptsRepository, logger } = request.diScope.cradle
 
-	const manuscript = await manuscriptsRepository.findById(id)
+	const exists = await manuscriptsRepository.existsById(id)
 
-	const result = manuscript.toResult(new ManuscriptNotFoundError(id))
+	if (!exists) {
+		const error = new ManuscriptNotFoundError(id)
 
-	if (result.isErr()) {
 		logger.warn(`Manuscript with id '${id}' not found`)
 
-		return reply
-			.status(result.error.code)
-			.send({ message: result.error.message })
+		return reply.status(error.code).send({ message: error.message })
 	}
 
 	await manuscriptsRepository.deleteById(id)

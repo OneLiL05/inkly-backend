@@ -5,7 +5,7 @@ const ManuscriptModelSchema = z.strictObject({
 	id: z.uuidv7().describe('Unique identifier of the manuscript'),
 	createdAt: z.date().describe('Creation timestamp of the manuscript'),
 	updatedAt: z.date().describe('Last update timestamp of the manuscript'),
-	deadlineAt: z.date().nullable().describe('Deadline of the manuscript'),
+	deadlineAt: z.date().describe('Deadline of the manuscript'),
 	name: z.string().min(5).max(100).describe('Name of the manuscript'),
 	description: z.string().optional().describe('Description of the manuscript'),
 	status: z

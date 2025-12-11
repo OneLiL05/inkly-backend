@@ -1,8 +1,11 @@
+import { checkPermissions } from '@/core/middlewares/check-permissions.middleware.js'
+import { isAuthorized } from '@/core/middlewares/is-authorized.middleware.js'
 import type { Routes } from '@/core/types/routes.js'
 import {
 	generateFailedHttpResponse,
 	generateFailedValidationResponse,
 } from '@/core/utils/schemas.js'
+import z from 'zod'
 import {
 	createManuscript,
 	deleteManuscript,
@@ -15,8 +18,6 @@ import {
 	ManuscriptModelSchema,
 	UpdateManuscriptSchema,
 } from '../schemas/index.js'
-import { isAuthorized } from '@/core/middlewares/is-authorized.middleware.js'
-import { checkPermissions } from '@/core/middlewares/check-permissions.middleware.js'
 
 export const getManuscriptsRoutes = (): Routes => ({
 	routes: [
@@ -89,11 +90,9 @@ export const getManuscriptsRoutes = (): Routes => ({
 				description: 'Update a manuscript by its ID',
 				tags: ['Manuscripts'],
 				params: GetManuscriptParamsSchema,
-				body: CreateManuscriptSchema.partial(),
+				body: UpdateManuscriptSchema,
 				response: {
-					200: ManuscriptModelSchema.describe(
-						'Manuscript updated successfully',
-					),
+					204: z.void().describe('Manuscript updated successfully'),
 					400: generateFailedValidationResponse().describe(
 						"ID parameter or request body doesn't match schema",
 					),
@@ -117,11 +116,8 @@ export const getManuscriptsRoutes = (): Routes => ({
 				description: 'Delete a manuscript by its ID',
 				tags: ['Manuscripts'],
 				params: GetManuscriptParamsSchema,
-				body: UpdateManuscriptSchema,
 				response: {
-					204: {
-						description: 'Manuscript deleted successfully',
-					},
+					204: z.void().describe('Manuscript deleted successfully'),
 					400: generateFailedValidationResponse().describe(
 						"ID parameter doesn't match schema",
 					),
