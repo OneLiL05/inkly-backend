@@ -6,6 +6,7 @@ import type { AppInstance } from './common.js'
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js'
 import type { Redis } from 'ioredis'
 import * as schema from '@/db/schema/index.js'
+import type { S3Client } from '@aws-sdk/client-s3'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type BaseDiConfig<T> = Record<keyof T, Resolver<any>>
@@ -18,6 +19,7 @@ interface CommonDependencies {
 		client: DatabaseClient
 	}
 	redis: Redis
+	s3: S3Client
 	logger: FastifyBaseLogger
 }
 

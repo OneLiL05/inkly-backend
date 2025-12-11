@@ -18,6 +18,7 @@ import {
 } from 'fastify-type-provider-zod'
 import { getRoutes } from './modules/index.js'
 import { registerAuthRoutes } from './modules/auth/routes/index.js'
+import fastifyMultipart from '@fastify/multipart'
 
 export class App {
 	private readonly app: AppInstance
@@ -92,7 +93,7 @@ export class App {
 		this.app.setErrorHandler((error, request, reply) => {
 			if (hasZodFastifySchemaValidationErrors(error)) {
 				const errObj = {
-					error: 'Response Validation Error',
+					error: 'Request Validation Error',
 					message: "Request doesn't match the schema",
 					status: 400,
 					details: {
@@ -142,6 +143,8 @@ export class App {
 			timeWindow: 15 * 1000,
 			allowList: ['127.0.0.1'],
 		})
+
+		await this.app.register(fastifyMultipart)
 
 		registerDependencies(diContainer, { app: this.app })
 	}

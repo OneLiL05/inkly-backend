@@ -11,6 +11,7 @@ import {
 	deleteManuscript,
 	getManuscript,
 	updateManuscript,
+	updloadManuscriptFile,
 } from '../handlers/index.js'
 import {
 	CreateManuscriptSchema,
@@ -122,6 +123,22 @@ export const getManuscriptsRoutes = (): Routes => ({
 						"ID parameter doesn't match schema",
 					),
 					404: generateFailedHttpResponse(404).describe('Manuscript not found'),
+				},
+			},
+		},
+		{
+			method: 'POST',
+			url: '/manuscripts/:id/file',
+			handler: updloadManuscriptFile,
+			preHandler: [isAuthorized, checkPermissions({ manuscript: ['update'] })],
+			schema: {
+				consumes: ['multipart/form-data'],
+				summary: 'Upload Manuscript File by ID',
+				description: 'Upload the file associated with a manuscript by its ID',
+				tags: ['Manuscripts'],
+				params: GetManuscriptParamsSchema,
+				response: {
+					204: z.void().describe('File uploaded successfully'),
 				},
 			},
 		},

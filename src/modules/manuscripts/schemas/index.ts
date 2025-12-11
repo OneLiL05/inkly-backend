@@ -3,11 +3,17 @@ import { MANUSCRIPT_STATUS, PUBLICATION_TYPE } from '../constants/index.js'
 
 const ManuscriptModelSchema = z.strictObject({
 	id: z.uuidv7().describe('Unique identifier of the manuscript'),
-	createdAt: z.date().describe('Creation timestamp of the manuscript'),
-	updatedAt: z.date().describe('Last update timestamp of the manuscript'),
-	deadlineAt: z.date().describe('Deadline of the manuscript'),
+	createdAt: z.coerce.date().describe('Creation timestamp of the manuscript'),
+	updatedAt: z.coerce
+		.date()
+		.describe('Last update timestamp of the manuscript'),
+	deadlineAt: z.coerce.date().describe('Deadline of the manuscript'),
 	name: z.string().min(5).max(100).describe('Name of the manuscript'),
-	description: z.string().optional().describe('Description of the manuscript'),
+	description: z
+		.string()
+		.nullable()
+		.default(null)
+		.describe('Description of the manuscript'),
 	status: z
 		.enum(Object.values(MANUSCRIPT_STATUS))
 		.describe('Status of the manuscript'),
@@ -42,7 +48,7 @@ const UpdateManuscriptSchema = CreateManuscriptSchema.omit({
 	organizationId: true,
 }).partial()
 
-type CreateManuscript = z.infer<typeof CreateManuscriptSchema>
+type CreateManuscript = Omit<z.infer<typeof CreateManuscriptSchema>, 'file'>
 type GetManuscript = z.infer<typeof GetManuscriptParamsSchema>
 type UpdateManuscript = z.infer<typeof UpdateManuscriptSchema>
 

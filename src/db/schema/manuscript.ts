@@ -1,5 +1,5 @@
 import { relations } from 'drizzle-orm'
-import { index, pgTable } from 'drizzle-orm/pg-core'
+import { index, pgTable, unique } from 'drizzle-orm/pg-core'
 import { baseTableAttrs } from '../utils.js'
 import { commentTable } from './comment.js'
 import { manuscriptTagTable } from './manuscript-tag.js'
@@ -24,6 +24,7 @@ export const manuscriptTable = pgTable(
 		index('manuscript_status_idx').on(t.status, t.organizationId),
 		index('manuscript_type_idx').on(t.publicationType, t.organizationId),
 		index('manuscript_language_idx').on(t.language, t.organizationId),
+		unique('manuscript_name_org_uidx').on(t.name, t.organizationId),
 	],
 )
 

@@ -21,5 +21,7 @@ const MANUSCRIPT_STATUS = {
 type ManuscriptStatus =
 	(typeof MANUSCRIPT_STATUS)[keyof typeof MANUSCRIPT_STATUS]
 
-export { PUBLICATION_TYPE, MANUSCRIPT_STATUS }
+const DOCUMENT_MIME_TYPES = ['application/pdf', 'application/msword']
+
+export { PUBLICATION_TYPE, MANUSCRIPT_STATUS, DOCUMENT_MIME_TYPES }
 export type { PublicationType, ManuscriptStatus }
