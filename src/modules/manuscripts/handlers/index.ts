@@ -20,9 +20,7 @@ export const getManuscript = async (
 	if (result.isErr()) {
 		logger.warn(`Manuscript with id '${id}' not found`)
 
-		return reply
-			.status(result.error.code)
-			.send({ message: result.error.message })
+		return reply.status(result.error.code).send(result.error.toObject())
 	}
 
 	return reply.status(200).send(result.value)
@@ -39,9 +37,7 @@ export const createManuscript = async (
 	if (result.isErr()) {
 		logger.error(`Failed to create manuscript: ${result.error.message}`)
 
-		return reply
-			.status(result.error.code)
-			.send({ message: result.error.message })
+		return reply.status(result.error.code).send(result.error.toObject())
 	}
 
 	logger.info(
@@ -68,7 +64,7 @@ export const updateManuscript = async (
 
 		logger.warn(`Manuscript with id '${id}' not found`)
 
-		return reply.status(error.code).send({ message: error.message })
+		return reply.status(error.code).send(error.toObject())
 	}
 
 	await manuscriptsRepository.updateById(id, request.body)
@@ -92,7 +88,7 @@ export const deleteManuscript = async (
 
 		logger.warn(`Manuscript with id '${id}' not found`)
 
-		return reply.status(error.code).send({ message: error.message })
+		return reply.status(error.code).send(error.toObject())
 	}
 
 	await manuscriptsRepository.deleteById(id)

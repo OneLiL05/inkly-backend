@@ -6,6 +6,14 @@ class HttpError extends Error {
 		this.code = code
 		this.name = 'HTTP_ERROR'
 	}
+
+	toObject() {
+		return {
+			status: this.code,
+			error: this.name,
+			message: this.message,
+		}
+	}
 }
 
 class NotFoundError extends HttpError {
@@ -22,6 +30,20 @@ class ConflictError extends HttpError {
 	}
 }
 
+class PermissionsError extends HttpError {
+	constructor() {
+		super(403, "You don't have the required permissions")
+		this.name = 'PERMISSIONS_ERROR'
+	}
+}
+
+class UnauthorizedError extends HttpError {
+	constructor() {
+		super(401, 'You are not authenticated')
+		this.name = 'UNAUTHORIZED_ERROR'
+	}
+}
+
 class InternalServerError extends HttpError {
 	constructor() {
 		super(500, 'An unexpected error occurred on the server')
@@ -29,4 +51,11 @@ class InternalServerError extends HttpError {
 	}
 }
 
-export { HttpError, NotFoundError, InternalServerError, ConflictError }
+export {
+	HttpError,
+	NotFoundError,
+	InternalServerError,
+	ConflictError,
+	PermissionsError,
+	UnauthorizedError,
+}
