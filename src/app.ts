@@ -18,6 +18,7 @@ import {
 } from 'fastify-type-provider-zod'
 import { getRoutes } from './modules/index.js'
 import { registerAuthRoutes } from './modules/auth/routes/index.js'
+import fastifyMultipart from '@fastify/multipart'
 
 export class App {
 	private readonly app: AppInstance
@@ -74,6 +75,7 @@ export class App {
 
 		await this.app.register(scalarApiReference, {
 			routePrefix: '/api',
+			logLevel: 'silent',
 			configuration: {
 				theme: 'deepSpace',
 				sources: [
@@ -91,17 +93,13 @@ export class App {
 		this.app.setErrorHandler((error, request, reply) => {
 			if (hasZodFastifySchemaValidationErrors(error)) {
 				const errObj = {
-					success: false,
-					data: null,
-					error: {
-						error: 'Response Validation Error',
-						message: "Request doesn't match the schema",
-						status: 400,
-						details: {
-							issues: error.validation,
-							method: request.method,
-							url: request.url,
-						},
+					error: 'Request Validation Error',
+					message: "Request doesn't match the schema",
+					status: 400,
+					details: {
+						issues: error.validation,
+						method: request.method,
+						url: request.url,
 					},
 				} satisfies FailureResponse
 
@@ -110,17 +108,13 @@ export class App {
 
 			if (isResponseSerializationError(error)) {
 				const errObj = {
-					success: false,
-					data: null,
-					error: {
-						error: 'Response Serialization Error',
-						message: "Response doesn't match the schema",
-						status: 500,
-						details: {
-							issues: error.cause.issues,
-							method: request.method,
-							url: request.url,
-						},
+					error: 'Response Serialization Error',
+					message: "Response doesn't match the schema",
+					status: 500,
+					details: {
+						issues: error.cause.issues,
+						method: request.method,
+						url: request.url,
 					},
 				} satisfies FailureResponse
 
@@ -149,6 +143,8 @@ export class App {
 			timeWindow: 15 * 1000,
 			allowList: ['127.0.0.1'],
 		})
+
+		await this.app.register(fastifyMultipart)
 
 		registerDependencies(diContainer, { app: this.app })
 	}

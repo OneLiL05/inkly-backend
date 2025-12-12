@@ -9,6 +9,7 @@ import { getConfig } from './config.js'
 import { Redis } from 'ioredis'
 import { EnhancedQueryLogger } from 'drizzle-query-logger'
 import * as schema from '@/db/schema/index.js'
+import { S3Client } from '@aws-sdk/client-s3'
 
 export const resolveCommonDiConfig = (
 	dependencies: ExternalDependencies,
@@ -59,6 +60,19 @@ export const resolveCommonDiConfig = (
 			},
 		},
 	).singleton(),
+	s3: asFunction(({ config }: CommonDependencies) => {
+		const { region, accessKeyId, secretAccessKey } = config.s3
+
+		const s3Client = new S3Client({
+			region: region,
+			credentials: {
+				accessKeyId,
+				secretAccessKey,
+			},
+		})
+
+		return s3Client
+	}).singleton(),
 	logger: asFunction(() => dependencies.app.log).singleton(),
 	config: asFunction(() => getConfig()).singleton(),
 })
