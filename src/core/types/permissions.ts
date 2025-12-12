@@ -1,6 +1,6 @@
 type Permission = 'read' | 'create' | 'update' | 'delete'
 
-type PermissionEntity = 'manuscript'
+type PermissionEntity = 'manuscript' | 'tag'
 
 type PermissionsRecord = Record<PermissionEntity, Permission[]>
 
