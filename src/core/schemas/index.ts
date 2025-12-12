@@ -1,7 +1,7 @@
 import type { MultipartFile } from '@fastify/multipart'
 import z from 'zod'
 
-const HEALTH_CHECK_SCHEMA = z
+const HealthCheckSchema = z
 	.object({
 		uptime: z.number().positive().describe('Uptime in seconds'),
 		message: z.string().describe('Health check message'),
@@ -44,4 +44,14 @@ const createFileSchema = (options: {
 	return schema
 }
 
-export { HEALTH_CHECK_SCHEMA, createFileSchema }
+const FileSchema = z.object({
+	id: z.uuidv7().describe('File unique identifier'),
+	createdAt: z.coerce.date().describe('File creation date'),
+	name: z.string().describe('File name'),
+	mimeType: z.string().describe('File MIME type'),
+	sizeInBytes: z.number().describe('File size in bytes'),
+	uploadedBy: z.string().describe('ID of the member who uploaded the file'),
+	manuscriptId: z.string().describe('ID of the manuscript the file belongs to'),
+})
+
+export { HealthCheckSchema, createFileSchema, FileSchema }

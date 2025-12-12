@@ -1,11 +1,18 @@
 import type { DatabaseClient } from '@/core/types/deps.js'
-import { PutObjectCommand, type S3Client } from '@aws-sdk/client-s3'
+import {
+	DeleteObjectCommand,
+	PutObjectCommand,
+	type S3Client,
+} from '@aws-sdk/client-s3'
 import type {
 	FileUploadService,
 	ManuscriptsInjectableDependencies,
 	UploadFileArgs,
 } from '../types/index.js'
 import { fileTable } from '@/db/schema/file.js'
+import { Err, None, Ok, Result } from 'ts-results-es'
+import { HttpError, InternalServerError } from '@/core/utils/errors.js'
+import { eq } from 'drizzle-orm'
 
 export class FileUploadServiceImpl implements FileUploadService {
 	private readonly db: DatabaseClient
@@ -26,27 +33,48 @@ export class FileUploadServiceImpl implements FileUploadService {
 		mimeType,
 		manuscriptId,
 		uploadedBy,
-	}: UploadFileArgs): Promise<void> {
+	}: UploadFileArgs): Promise<Result<None, HttpError>> {
 		const name = `${Date.now()}-${fileName}`
 
-		await Promise.all([
-			this.s3.send(
-				new PutObjectCommand({
-					Bucket: this.bucketName,
-					Key: name,
-					Body: fileBuffer,
-					ContentType: mimeType,
+		try {
+			await Promise.all([
+				this.s3.send(
+					new PutObjectCommand({
+						Bucket: this.bucketName,
+						Key: name,
+						Body: fileBuffer,
+						ContentType: mimeType,
+					}),
+				),
+				this.db.insert(fileTable).values({
+					name,
+					path: this.getFileUrl(name),
+					uploadedBy,
+					mimeType,
+					manuscriptId,
+					sizeInBytes: fileBuffer.length,
 				}),
-			),
-			this.db.insert(fileTable).values({
-				name,
-				path: this.getFileUrl(name),
-				uploadedBy,
-				mimeType,
-				manuscriptId,
-				sizeInBytes: fileBuffer.length,
-			}),
-		])
+			])
+
+			return Ok(None)
+		} catch {
+			return Err(new InternalServerError())
+		}
+	}
+
+	async deleteFile(fileName: string): Promise<Result<None, HttpError>> {
+		try {
+			await Promise.all([
+				this.s3.send(
+					new DeleteObjectCommand({ Bucket: this.bucketName, Key: fileName }),
+				),
+				this.db.delete(fileTable).where(eq(fileTable.name, fileName)),
+			])
+
+			return Ok(None)
+		} catch {
+			return Err(new InternalServerError())
+		}
 	}
 
 	private getFileUrl(key: string): string {

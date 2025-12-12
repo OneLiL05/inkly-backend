@@ -34,6 +34,13 @@ const GetManuscriptParamsSchema = z.strictObject({
 	id: z.uuidv7().describe('Identifier of the manuscript'),
 })
 
+const GetFileParamsSchema = z.object({
+	manuscriptId: z.uuidv7().describe('Identifier of the manuscript'),
+	fileId: z.uuidv7().describe('Identifier of the manuscript file'),
+})
+
+type GetFile = z.infer<typeof GetFileParamsSchema>
+
 const CreateManuscriptSchema = ManuscriptModelSchema.pick({
 	deadlineAt: true,
 	name: true,
@@ -54,8 +61,9 @@ type UpdateManuscript = z.infer<typeof UpdateManuscriptSchema>
 
 export {
 	CreateManuscriptSchema,
+	GetFileParamsSchema,
 	GetManuscriptParamsSchema,
 	ManuscriptModelSchema,
 	UpdateManuscriptSchema,
 }
-export type { CreateManuscript, GetManuscript, UpdateManuscript }
+export type { CreateManuscript, GetFile, GetManuscript, UpdateManuscript }

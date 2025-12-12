@@ -1,14 +1,14 @@
+import { PermissionsError } from '@/core/utils/errors.js'
+import type { MultipartFile } from '@fastify/multipart'
+import { fromNodeHeaders } from 'better-auth/node'
 import type { FastifyReply, FastifyRequest } from 'fastify'
-import { ManuscriptNotFoundError } from '../errors/index.js'
+import { FileNotFoundError, ManuscriptNotFoundError } from '../errors/index.js'
 import {
 	type CreateManuscript,
+	type GetFile,
 	type GetManuscript,
 	type UpdateManuscript,
 } from '../schemas/index.js'
-import { createFileSchema } from '@/core/schemas/index.js'
-import { DOCUMENT_MIME_TYPES } from '../constants/index.js'
-import { fromNodeHeaders } from 'better-auth/node'
-import { PermissionsError } from '@/core/utils/errors.js'
 
 export const getManuscript = async (
 	request: FastifyRequest<{ Params: GetManuscript }>,
@@ -28,6 +28,26 @@ export const getManuscript = async (
 	}
 
 	return reply.status(200).send(result.value)
+}
+
+export const getManuscriptFiles = async (
+	request: FastifyRequest<{ Params: GetManuscript }>,
+	reply: FastifyReply,
+): Promise<void> => {
+	const { id } = request.params
+	const { manuscriptsRepository } = request.diScope.cradle
+
+	const exists = await manuscriptsRepository.existsById(id)
+
+	if (!exists) {
+		const error = new ManuscriptNotFoundError(id)
+
+		return reply.status(error.code).send(error.toObject())
+	}
+
+	const files = await manuscriptsRepository.findFiles(id)
+
+	return reply.status(200).send(files)
 }
 
 export const createManuscript = async (
@@ -102,35 +122,55 @@ export const deleteManuscript = async (
 	return reply.status(204).send()
 }
 
+export const deleteManuscriptFile = async (
+	request: FastifyRequest<{ Params: GetFile }>,
+	reply: FastifyReply,
+): Promise<void> => {
+	const { manuscriptId, fileId } = request.params
+	const { fileUploadService, manuscriptsRepository } = request.diScope.cradle
+
+	const manuscriptOption = await manuscriptsRepository.findById(manuscriptId)
+
+	const manuscriptResult = manuscriptOption.toResult(
+		new ManuscriptNotFoundError(manuscriptId),
+	)
+
+	if (manuscriptResult.isErr()) {
+		return reply
+			.status(manuscriptResult.error.code)
+			.send(manuscriptResult.error.toObject())
+	}
+
+	const fileOption = await manuscriptsRepository.findFile({
+		fileId,
+		manuscriptId,
+	})
+
+	const fileResult = fileOption.toResult(
+		new FileNotFoundError({ fileId, manuscriptId }),
+	)
+
+	if (fileResult.isErr()) {
+		return reply.status(fileResult.error.code).send(fileResult.error.toObject())
+	}
+
+	const deleteResult = await fileUploadService.deleteFile(fileId)
+
+	if (deleteResult.isErr()) {
+		return reply
+			.status(deleteResult.error.code)
+			.send(deleteResult.error.toObject())
+	}
+
+	return reply.status(204).send()
+}
+
 export const updloadManuscriptFile = async (
 	request: FastifyRequest<{ Params: GetManuscript }>,
 	reply: FastifyReply,
 ): Promise<void> => {
 	const { id } = request.params
 	const { logger, auth, fileUploadService } = request.diScope.cradle
-
-	const file = await request.file()
-
-	const documentSchema = createFileSchema({
-		allowedMimeTypes: DOCUMENT_MIME_TYPES,
-	})
-
-	const result = documentSchema.safeParse(file)
-
-	if (!result.success) {
-		return reply.status(400).send({
-			status: 400,
-			error: 'Request Validation Error',
-			message: 'Uploaded file is invalid',
-			details: {
-				issues: result.error.issues,
-				method: request.method,
-				url: request.url,
-			},
-		})
-	}
-
-	logger.info(file?.filename)
 
 	const activeMember = await auth.api.getActiveMember({
 		headers: fromNodeHeaders(request.headers),
@@ -142,25 +182,22 @@ export const updloadManuscriptFile = async (
 		return reply.status(error.code).send(error.toObject())
 	}
 
-	const fileBuffer = await result.data.toBuffer()
+	const file = (await request.file()) as MultipartFile
 
-	try {
-		await fileUploadService.uploadFile({
-			fileBuffer: fileBuffer,
-			fileName: result.data.filename || 'untitled',
-			uploadedBy: activeMember.id,
-			mimeType: result.data.mimetype,
-			manuscriptId: id,
-		})
-	} catch (e: unknown) {
-		logger.error(
-			`Failed to upload file for manuscript '${id}': ${e instanceof Error ? e.message : String(e)}`,
-		)
-		return reply.status(500).send({
-			status: 500,
-			error: 'Internal Server Error',
-			message: 'Failed to upload manuscript file',
-		})
+	const fileBuffer = await file.toBuffer()
+
+	const result = await fileUploadService.uploadFile({
+		fileBuffer: fileBuffer,
+		fileName: file.filename || 'untitled',
+		uploadedBy: activeMember.id,
+		mimeType: file.mimetype,
+		manuscriptId: id,
+	})
+
+	if (result.isErr()) {
+		logger.error(`Failed to upload file for manuscript '${id}'`)
+
+		return reply.status(result.error.code).send(result.error.toObject())
 	}
 
 	return reply.status(204).send()

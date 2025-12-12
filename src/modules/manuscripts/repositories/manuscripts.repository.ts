@@ -2,10 +2,11 @@ import { EntityRepository } from '@/core/repositories/entity.repository.js'
 import { manuscriptTable } from '@/db/schema/manuscript.js'
 import type { Manuscript } from '@/db/types.js'
 import type {
+	FindFileArgs,
 	ManuscriptsInjectableDependencies,
 	ManuscriptsRepository,
 } from '../types/index.js'
-import { Err, Ok, type Result } from 'ts-results-es'
+import { Err, None, Ok, Option, Some, type Result } from 'ts-results-es'
 import {
 	ConflictError,
 	InternalServerError,
@@ -14,7 +15,9 @@ import {
 import type { CreateManuscript, UpdateManuscript } from '../schemas/index.js'
 import postgres from 'postgres'
 import { DUPLICATE_KEY_ERR_CODE } from '@/core/constants/db.js'
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
+import type { File } from '@/db/types.js'
+import { fileTable } from '@/db/schema/file.js'
 
 export class ManuscriptsRepositoryImpl
 	extends EntityRepository<Manuscript, string>
@@ -22,6 +25,29 @@ export class ManuscriptsRepositoryImpl
 {
 	constructor({ db }: ManuscriptsInjectableDependencies) {
 		super({ db: db.client, table: manuscriptTable })
+	}
+
+	async findFile({
+		fileId,
+		manuscriptId,
+	}: FindFileArgs): Promise<Option<File>> {
+		const rows = await this.db
+			.select()
+			.from(fileTable)
+			.where(
+				and(eq(fileTable.id, fileId), eq(fileTable.manuscriptId, manuscriptId)),
+			)
+
+		const file = rows.at(0)
+
+		return file ? Some(file) : None
+	}
+
+	async findFiles(manuscriptId: string): Promise<File[]> {
+		return this.db
+			.select()
+			.from(fileTable)
+			.where(eq(fileTable.manuscriptId, manuscriptId))
 	}
 
 	async createOne(
