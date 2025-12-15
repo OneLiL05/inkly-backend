@@ -1,4 +1,4 @@
-import { createFileSchema } from '@/core/schemas/index.js'
+import { createFileSchema } from '@/core/schemas/file.js'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 
 export const validateFile = ({

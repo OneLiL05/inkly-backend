@@ -1,4 +1,4 @@
-import { HealthCheckSchema } from '@/core/schemas/index.js'
+import { HealthCheckSchema } from '@/core/schemas/common.js'
 import type { Routes } from '@/core/types/routes.js'
 import { getCommentsRoutes } from './comments/routes/index.js'
 import { getManuscriptsRoutes } from './manuscripts/routes/index.js'

@@ -1,7 +1,7 @@
 import {
 	buildPaginatedSchema,
 	CursorPaginationQuerySchema,
-} from '@/core/schemas/index.js'
+} from '@/core/schemas/pagination.js'
 import z from 'zod'
 
 const CommentModelSchema = z.strictObject({
