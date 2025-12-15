@@ -9,6 +9,7 @@ import {
 	type GetManuscript,
 	type UpdateManuscript,
 } from '../schemas/index.js'
+import type { GetOrganization } from '@/modules/organizations/schemas/index.js'
 
 export const getManuscript = async (
 	request: FastifyRequest<{ Params: GetManuscript }>,
@@ -50,6 +51,18 @@ export const getManuscriptFiles = async (
 	return reply.status(200).send(files)
 }
 
+export const getOrganizationManuscripts = async (
+	request: FastifyRequest<{ Params: GetOrganization }>,
+	reply: FastifyReply,
+): Promise<void> => {
+	const { id } = request.params
+	const { manuscriptsRepository } = request.diScope.cradle
+
+	const manuscripts = await manuscriptsRepository.findAllByOrganization(id)
+
+	return reply.status(200).send(manuscripts)
+}
+
 export const createManuscript = async (
 	request: FastifyRequest<{ Body: CreateManuscript }>,
 	reply: FastifyReply,
@@ -79,7 +92,8 @@ export const updateManuscript = async (
 	reply: FastifyReply,
 ): Promise<void> => {
 	const { id } = request.params
-	const { manuscriptsRepository, logger } = request.diScope.cradle
+	const { manuscriptsRepository, logger, tagsRepository } =
+		request.diScope.cradle
 
 	const exists = await manuscriptsRepository.existsById(id)
 
@@ -91,7 +105,18 @@ export const updateManuscript = async (
 		return reply.status(error.code).send(error.toObject())
 	}
 
-	await manuscriptsRepository.updateById(id, request.body)
+	const incomingTagIds = request.body.tagIds ?? []
+
+	const { tagsToAdd, tagsToRemove } = await tagsRepository.getTagsDiff(
+		id,
+		incomingTagIds,
+	)
+
+	await manuscriptsRepository.updateById(id, {
+		...request.body,
+		tagsToAdd,
+		tagsToRemove,
+	})
 
 	logger.info(`Manuscript with id '${id}' updated`)
 

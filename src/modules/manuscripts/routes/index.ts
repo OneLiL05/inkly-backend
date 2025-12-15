@@ -12,6 +12,7 @@ import {
 	deleteManuscriptFile,
 	getManuscript,
 	getManuscriptFiles,
+	getOrganizationManuscripts,
 	updateManuscript,
 	updloadManuscriptFile,
 } from '../handlers/index.js'
@@ -113,6 +114,29 @@ export const getManuscriptsRoutes = (): Routes => ({
 						'User is not authorized to access this manuscript files',
 					),
 					404: generateFailedHttpResponse(404).describe('Manuscript not found'),
+				},
+			},
+		},
+		{
+			method: 'GET',
+			url: '/organizations/:id/manuscripts',
+			handler: getOrganizationManuscripts,
+			preHandler: [isAuthorized, checkPermissions({ manuscript: ['read'] })],
+			schema: {
+				summary: 'Get all Manuscripts in an Organization',
+				description:
+					'Retrieve all manuscripts associated with the organization',
+				tags: ['Manuscripts'],
+				response: {
+					200: z
+						.array(ManuscriptModelSchema)
+						.describe('List of manuscripts in the organization'),
+					401: generateFailedHttpResponse(401).describe(
+						'User is not authenticated',
+					),
+					403: generateFailedHttpResponse(403).describe(
+						'User is not authorized to view manuscripts',
+					),
 				},
 			},
 		},

@@ -1,6 +1,7 @@
 import { HealthCheckSchema } from '@/core/schemas/index.js'
 import type { Routes } from '@/core/types/routes.js'
 import { getManuscriptsRoutes } from './manuscripts/routes/index.js'
+import { getTagsRoutes } from './tags/routes/index.js'
 
 export const getRoutes = (): Routes => {
 	return {
@@ -26,6 +27,7 @@ export const getRoutes = (): Routes => {
 				},
 			},
 			...getManuscriptsRoutes().routes,
+			...getTagsRoutes().routes,
 		],
 	}
 }

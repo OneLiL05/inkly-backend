@@ -1,23 +1,23 @@
+import { DUPLICATE_KEY_ERR_CODE } from '@/core/constants/db.js'
 import { EntityRepository } from '@/core/repositories/entity.repository.js'
+import { InternalServerError, type HttpError } from '@/core/utils/errors.js'
+import { fileTable } from '@/db/schema/file.js'
+import { manuscriptTagTable } from '@/db/schema/manuscript-tag.js'
 import { manuscriptTable } from '@/db/schema/manuscript.js'
-import type { Manuscript } from '@/db/types.js'
+import { tagTable } from '@/db/schema/tag.js'
+import type { File, Manuscript, Tag } from '@/db/types.js'
+import { and, eq, getTableColumns, inArray } from 'drizzle-orm'
+import postgres from 'postgres'
+import { Err, None, Ok, Option, Some, type Result } from 'ts-results-es'
+import { ManuscriptAlreadyExistsError } from '../errors/index.js'
+import type { CreateManuscript } from '../schemas/index.js'
 import type {
 	FindFileArgs,
 	ManuscriptsInjectableDependencies,
 	ManuscriptsRepository,
+	UpdateManuscriptData,
 } from '../types/index.js'
-import { Err, None, Ok, Option, Some, type Result } from 'ts-results-es'
-import {
-	ConflictError,
-	InternalServerError,
-	type HttpError,
-} from '@/core/utils/errors.js'
-import type { CreateManuscript, UpdateManuscript } from '../schemas/index.js'
-import postgres from 'postgres'
-import { DUPLICATE_KEY_ERR_CODE } from '@/core/constants/db.js'
-import { and, eq } from 'drizzle-orm'
-import type { File } from '@/db/types.js'
-import { fileTable } from '@/db/schema/file.js'
+import { mapManuscriptWithTags } from '../utils/index.js'
 
 export class ManuscriptsRepositoryImpl
 	extends EntityRepository<Manuscript, string>
@@ -25,6 +25,64 @@ export class ManuscriptsRepositoryImpl
 {
 	constructor({ db }: ManuscriptsInjectableDependencies) {
 		super({ db: db.client, table: manuscriptTable })
+	}
+
+	override async findAll(): Promise<Manuscript[]> {
+		const rows = await this.db.query.manuscriptTable.findMany({
+			with: {
+				tags: {
+					with: {
+						tag: true,
+					},
+				},
+			},
+		})
+
+		const manuscripts = rows.map(mapManuscriptWithTags)
+
+		return manuscripts
+	}
+
+	async findAllByOrganization(organizationId: string): Promise<Manuscript[]> {
+		const rows = await this.db.query.manuscriptTable.findMany({
+			where: eq(manuscriptTable.organizationId, organizationId),
+			with: {
+				tags: {
+					with: {
+						tag: true,
+					},
+				},
+			},
+		})
+
+		const manuscripts = rows.map(mapManuscriptWithTags)
+
+		return manuscripts
+	}
+
+	override async findById(id: string): Promise<Option<Manuscript>> {
+		const rows = await this.db.query.manuscriptTable.findMany({
+			where: eq(manuscriptTable.id, id),
+			with: {
+				tags: {
+					with: {
+						tag: true,
+					},
+				},
+			},
+		})
+
+		const manuscript = rows.map(mapManuscriptWithTags).at(0)
+
+		return manuscript ? Some(manuscript) : None
+	}
+
+	async findManuscriptTags(manuscriptId: string): Promise<Tag[]> {
+		return this.db
+			.select(getTableColumns(tagTable))
+			.from(manuscriptTagTable)
+			.innerJoin(tagTable, eq(manuscriptTagTable.tagId, tagTable.id))
+			.where(eq(manuscriptTagTable.manuscriptId, manuscriptId))
 	}
 
 	async findFile({
@@ -54,31 +112,67 @@ export class ManuscriptsRepositoryImpl
 		data: CreateManuscript,
 	): Promise<Result<Manuscript, HttpError>> {
 		try {
-			const rows = await this.db
-				.insert(manuscriptTable)
-				.values(data)
-				.returning()
+			const { tagIds, ...rest } = data
 
-			return Ok(rows.at(0) as Manuscript)
+			const manuscript = await this.db.transaction(async (tx) => {
+				const rows = await tx.insert(manuscriptTable).values(rest).returning()
+
+				const manuscript = rows.at(0) as Manuscript
+
+				if (tagIds.length) {
+					const tagInserts = tagIds.map((tagId) => ({
+						manuscriptId: manuscript.id,
+						tagId,
+					}))
+
+					await tx.insert(manuscriptTagTable).values(tagInserts)
+				}
+
+				return manuscript
+			})
+
+			return Ok(manuscript)
 		} catch (error: unknown) {
 			if (
 				error instanceof Error &&
 				error.cause instanceof postgres.PostgresError &&
 				error.cause.code === DUPLICATE_KEY_ERR_CODE
 			) {
-				return Err(
-					new ConflictError('Manuscript with the same name already exists'),
-				)
+				return Err(new ManuscriptAlreadyExistsError(data.name))
 			}
 
 			return Err(new InternalServerError())
 		}
 	}
 
-	async updateById(id: string, data: UpdateManuscript): Promise<void> {
-		await this.db
-			.update(manuscriptTable)
-			.set(data)
-			.where(eq(manuscriptTable.id, id))
+	async updateById(id: string, data: UpdateManuscriptData): Promise<void> {
+		const { tagsToAdd, tagsToRemove, ...rest } = data
+
+		await this.db.transaction(async (tx) => {
+			if (tagsToAdd.length) {
+				const tagInserts = tagsToAdd.map((tagId) => ({
+					manuscriptId: id,
+					tagId,
+				}))
+
+				await tx.insert(manuscriptTagTable).values(tagInserts)
+			}
+
+			if (tagsToRemove.length) {
+				await tx
+					.delete(manuscriptTagTable)
+					.where(
+						and(
+							eq(manuscriptTagTable.manuscriptId, id),
+							inArray(manuscriptTagTable.tagId, tagsToRemove),
+						),
+					)
+			}
+
+			await tx
+				.update(manuscriptTable)
+				.set(rest)
+				.where(eq(manuscriptTable.id, id))
+		})
 	}
 }

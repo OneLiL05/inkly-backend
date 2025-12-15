@@ -4,7 +4,7 @@ import type { PermissionsRecord } from '../types/permissions.js'
 import { InternalServerError, PermissionsError } from '../utils/errors.js'
 import { APIError } from 'better-auth'
 
-export const checkPermissions = (permissions: PermissionsRecord) => {
+export const checkPermissions = (permissions: Partial<PermissionsRecord>) => {
 	return async (request: FastifyRequest, reply: FastifyReply) => {
 		const { auth, logger } = request.diScope.cradle
 		const permissionsError = new PermissionsError()

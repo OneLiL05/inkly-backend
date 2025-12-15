@@ -54,4 +54,19 @@ const FileSchema = z.object({
 	manuscriptId: z.string().describe('ID of the manuscript the file belongs to'),
 })
 
-export { HealthCheckSchema, createFileSchema, FileSchema }
+const HexSchema = z
+	.custom<`#${string}`>((val) => {
+		const regExp = /^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$/
+
+		return typeof val === 'string' && regExp.test(val)
+	})
+	.transform((val) => {
+		if (val.length === 4) {
+			return `#${val[1]}${val[1]}${val[2]}${val[2]}${val[3]}${val[3]}`.toUpperCase()
+		}
+
+		return val.toUpperCase()
+	})
+	.brand<'HexColor'>()
+
+export { HealthCheckSchema, createFileSchema, FileSchema, HexSchema }
