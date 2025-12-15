@@ -9,7 +9,18 @@ interface TagExistsInOrganizationArgs {
 	tagId: string
 	organizationId: string
 }
+
+interface TagsDiff {
+	tagsToAdd: string[]
+	tagsToRemove: string[]
+}
 interface TagsRepository extends Repository<Tag, string> {
+	findAllByOrganization: (organizationId: string) => Promise<Tag[]>
+	findAllByManuscript: (manuscriptId: string) => Promise<Tag[]>
+	getTagsDiff: (
+		manuscriptId: string,
+		currentTags: string[],
+	) => Promise<TagsDiff>
 	existsInOrganization: (args: TagExistsInOrganizationArgs) => Promise<boolean>
 	createOne: (data: CreateTag) => Promise<Result<Tag, HttpError>>
 	updateById: (id: string, data: UpdateTag) => Promise<Result<None, HttpError>>
@@ -29,4 +40,5 @@ export type {
 	TagsInjectableDependencies,
 	TagsDiConfig,
 	TagExistsInOrganizationArgs,
+	TagsDiff,
 }

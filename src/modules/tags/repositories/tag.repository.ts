@@ -3,17 +3,19 @@ import { EntityRepository } from '@/core/repositories/entity.repository.js'
 import { InternalServerError, type HttpError } from '@/core/utils/errors.js'
 import { tagTable } from '@/db/schema/tag.js'
 import type { Tag } from '@/db/types.js'
-import { and, eq, SQL } from 'drizzle-orm'
+import { and, eq, getTableColumns, SQL } from 'drizzle-orm'
 import postgres from 'postgres'
 import { Err, None, Ok, type Result } from 'ts-results-es'
 import { TagAlreadyExistsError } from '../errors/index.js'
 import type { CreateTag, UpdateTag } from '../schemas/index.js'
 import type {
 	TagExistsInOrganizationArgs,
+	TagsDiff,
 	TagsInjectableDependencies,
 	TagsRepository,
 } from '../types/index.js'
 import { buildExistsQuery } from '@/core/utils/sql.js'
+import { manuscriptTagTable } from '@/db/schema/manuscript-tag.js'
 
 export class TagsRepositoryImpl
 	extends EntityRepository<Tag, string>
@@ -21,6 +23,38 @@ export class TagsRepositoryImpl
 {
 	constructor({ db }: TagsInjectableDependencies) {
 		super({ db: db.client, table: tagTable })
+	}
+
+	async findAllByOrganization(organizationId: string): Promise<Tag[]> {
+		return this.db
+			.select()
+			.from(tagTable)
+			.where(eq(tagTable.organizationId, organizationId))
+	}
+
+	async findAllByManuscript(manuscriptId: string): Promise<Tag[]> {
+		return this.db
+			.select(getTableColumns(tagTable))
+			.from(manuscriptTagTable)
+			.innerJoin(tagTable, eq(manuscriptTagTable.tagId, tagTable.id))
+			.where(eq(manuscriptTagTable.manuscriptId, manuscriptId))
+	}
+
+	async getTagsDiff(
+		manuscriptId: string,
+		newTagIds: string[],
+	): Promise<TagsDiff> {
+		const existingTags = await this.findAllByManuscript(manuscriptId)
+
+		const currentTagIds = existingTags.map((tag) => tag.id)
+
+		const tagsToAdd = newTagIds.filter((id) => !currentTagIds.includes(id))
+		const tagsToRemove = currentTagIds.filter((id) => !newTagIds.includes(id))
+
+		return {
+			tagsToAdd,
+			tagsToRemove,
+		}
 	}
 
 	async existsInOrganization({

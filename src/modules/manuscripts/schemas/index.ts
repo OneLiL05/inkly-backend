@@ -49,6 +49,12 @@ const CreateManuscriptSchema = ManuscriptModelSchema.pick({
 	publicationType: true,
 	language: true,
 	organizationId: true,
+}).extend({
+	tagIds: z
+		.uuidv7()
+		.array()
+		.describe('List of tag identifiers associated with the manuscript')
+		.default([]),
 })
 
 const UpdateManuscriptSchema = CreateManuscriptSchema.omit({

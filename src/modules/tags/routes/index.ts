@@ -1,5 +1,10 @@
 import type { Routes } from '@/core/types/routes.js'
-import { createTag, deleteTag, updateTag } from '../handlers/index.js'
+import {
+	createTag,
+	deleteTag,
+	getOrganizationTags,
+	updateTag,
+} from '../handlers/index.js'
 import { isAuthorized } from '@/core/middlewares/is-authorized.middleware.js'
 import { checkPermissions } from '@/core/middlewares/check-permissions.middleware.js'
 import {
@@ -44,8 +49,28 @@ export const getTagsRoutes = (): Routes => ({
 			},
 		},
 		{
+			method: 'GET',
+			url: '/organizations/:id/tags',
+			handler: getOrganizationTags,
+			preHandler: [isAuthorized, checkPermissions({ tag: ['read'] })],
+			schema: {
+				summary: 'Get all Tags in an Organization',
+				description: 'Retrieve all tags associated with the organization',
+				tags: ['Tags'],
+				response: {
+					200: z.array(TagSchema).describe('List of tags in the organization'),
+					401: generateFailedHttpResponse(401).describe(
+						'User is not authenticated',
+					),
+					403: generateFailedHttpResponse(403).describe(
+						'User is not authorized to view tags',
+					),
+				},
+			},
+		},
+		{
 			method: 'PUT',
-			url: 'organizations/:organizationId/tags/:tagId',
+			url: '/organizations/:organizationId/tags/:tagId',
 			handler: updateTag,
 			preHandler: [isAuthorized, checkPermissions({ tag: ['update'] })],
 			schema: {
@@ -73,7 +98,7 @@ export const getTagsRoutes = (): Routes => ({
 		},
 		{
 			method: 'DELETE',
-			url: 'organizations/:organizationId/tags/:tagId',
+			url: '/organizations/:organizationId/tags/:tagId',
 			handler: deleteTag,
 			preHandler: [isAuthorized, checkPermissions({ tag: ['delete'] })],
 			schema: {
