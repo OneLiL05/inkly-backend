@@ -1,18 +1,25 @@
 import { DUPLICATE_KEY_ERR_CODE } from '@/core/constants/db.js'
 import { EntityRepository } from '@/core/repositories/entity.repository.js'
+import type { Paginated } from '@/core/types/pagination.js'
 import { InternalServerError, type HttpError } from '@/core/utils/errors.js'
+import {
+	extractPaginationMetadata,
+	toPaginated,
+} from '@/core/utils/pagination.js'
+import { SqlExpressions } from '@/core/utils/sql.js'
 import { fileTable } from '@/db/schema/file.js'
 import { manuscriptTagTable } from '@/db/schema/manuscript-tag.js'
 import { manuscriptTable } from '@/db/schema/manuscript.js'
 import { tagTable } from '@/db/schema/tag.js'
 import type { File, Manuscript, Tag } from '@/db/types.js'
-import { and, eq, getTableColumns, inArray } from 'drizzle-orm'
+import { and, desc, eq, getTableColumns, gt, inArray } from 'drizzle-orm'
 import postgres from 'postgres'
 import { Err, None, Ok, Option, Some, type Result } from 'ts-results-es'
 import { ManuscriptAlreadyExistsError } from '../errors/index.js'
 import type { CreateManuscript } from '../schemas/index.js'
 import type {
 	FindFileArgs,
+	FindManuscriptsByOrganizationArgs,
 	ManuscriptsInjectableDependencies,
 	ManuscriptsRepository,
 	UpdateManuscriptData,
@@ -58,6 +65,40 @@ export class ManuscriptsRepositoryImpl
 		const manuscripts = rows.map(mapManuscriptWithTags)
 
 		return manuscripts
+	}
+
+	async findByOrganizationPaginated(
+		args: FindManuscriptsByOrganizationArgs,
+	): Promise<Paginated<Manuscript>> {
+		const { organizationId, pagination } = args
+		const { cursor, limit } = pagination
+
+		const conditions = new SqlExpressions(
+			eq(manuscriptTable.organizationId, organizationId),
+		)
+
+		if (cursor) {
+			conditions.add(gt(manuscriptTable.createdAt, new Date(cursor)))
+		}
+
+		const rows = await this.db.query.manuscriptTable.findMany({
+			where: and(...conditions.toArray()),
+			with: {
+				tags: {
+					with: {
+						tag: true,
+					},
+				},
+			},
+			orderBy: desc(manuscriptTable.createdAt),
+			limit: limit + 1,
+		})
+
+		const { data, hasMore, nextCursor } = extractPaginationMetadata(rows, limit)
+
+		const manuscripts = data.map(mapManuscriptWithTags)
+
+		return toPaginated({ data: manuscripts, hasMore, nextCursor })
 	}
 
 	override async findById(id: string): Promise<Option<Manuscript>> {

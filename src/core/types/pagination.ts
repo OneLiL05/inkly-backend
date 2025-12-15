@@ -1,25 +1,15 @@
-interface CursorPaginationMeta {
-	nextCursor: string | null
-	hasMore: boolean
-}
-
-interface CursorPaginationOptions {
-	cursor?: string | null
-	limit: number
-}
-
+import type { PaginationMeta, PaginationQuery } from '../schemas/pagination.js'
 interface Paginated<T extends object> {
 	data: T[]
-	meta: CursorPaginationMeta
+	meta: PaginationMeta
+}
+
+interface ExtractedPaginationMetadata<T extends object> extends PaginationMeta {
+	data: T[]
 }
 
 type FindPaginatedArgs<T extends object> = T & {
-	pagination: CursorPaginationOptions
+	pagination: PaginationQuery
 }
 
-export type {
-	CursorPaginationMeta,
-	CursorPaginationOptions,
-	FindPaginatedArgs,
-	Paginated,
-}
+export type { ExtractedPaginationMetadata, FindPaginatedArgs, Paginated }

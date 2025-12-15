@@ -1,4 +1,8 @@
 import { HexSchema } from '@/core/schemas/common.js'
+import {
+	buildPaginatedSchema,
+	PaginationQuerySchema,
+} from '@/core/schemas/pagination.js'
 import z from 'zod'
 
 const TagSchema = z.object({
@@ -14,6 +18,16 @@ const GetTagSchema = z.object({
 	organizationId: z.uuidv7().describe('Identifier for the organization'),
 })
 
+const GetOrganizationTagsParamsSchema = z.object({
+	organizationId: z.uuidv7().describe('Identifier for the organization'),
+})
+
+type GetOrganizationTagsParams = z.infer<typeof GetOrganizationTagsParamsSchema>
+
+type GetOrganizationTagsQuery = z.infer<typeof PaginationQuerySchema>
+
+const PaginatedTagsSchema = buildPaginatedSchema(TagSchema)
+
 type GetTag = z.infer<typeof GetTagSchema>
 
 const CreateTagShema = TagSchema.omit({ id: true, createdAt: true })
@@ -24,5 +38,18 @@ const UpdateTagSchema = CreateTagShema.omit({ organizationId: true }).partial()
 
 type UpdateTag = z.infer<typeof UpdateTagSchema>
 
-export { CreateTagShema, GetTagSchema, TagSchema, UpdateTagSchema }
-export type { CreateTag, GetTag, UpdateTag }
+export {
+	CreateTagShema,
+	GetOrganizationTagsParamsSchema,
+	GetTagSchema,
+	PaginatedTagsSchema,
+	TagSchema,
+	UpdateTagSchema,
+}
+export type {
+	CreateTag,
+	GetTag,
+	UpdateTag,
+	GetOrganizationTagsParams,
+	GetOrganizationTagsQuery,
+}

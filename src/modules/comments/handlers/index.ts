@@ -1,41 +1,43 @@
-import type { FastifyReply, FastifyRequest } from 'fastify'
-import { fromNodeHeaders } from 'better-auth/node'
+import type { PaginationQuery } from '@/core/schemas/pagination.js'
 import { UnauthorizedError } from '@/core/utils/errors.js'
 import { ManuscriptNotFoundError } from '@/modules/manuscripts/errors/index.js'
+import type { GetManuscript } from '@/modules/manuscripts/schemas/index.js'
+import { fromNodeHeaders } from 'better-auth/node'
+import type { FastifyReply, FastifyRequest } from 'fastify'
 import {
 	CommentNotFoundError,
 	ParentCommentNotFoundError,
 } from '../errors/index.js'
 import type {
 	CreateComment,
-	GetCommentParams,
-	GetManuscriptCommentsParams,
-	GetManuscriptCommentsQuery,
 	CreateReplyParams,
+	GetCommentParams,
 	UpdateComment,
 } from '../schemas/index.js'
 
 export const getManuscriptComments = async (
 	request: FastifyRequest<{
-		Params: GetManuscriptCommentsParams
-		Querystring: GetManuscriptCommentsQuery
+		Params: GetManuscript
+		Querystring: PaginationQuery
 	}>,
 	reply: FastifyReply,
 ): Promise<void> => {
-	const { manuscriptId } = request.params
+	const { id } = request.params
 	const { cursor, limit = 20 } = request.query
 	const { commentsRepository, manuscriptsRepository, logger } =
 		request.diScope.cradle
 
-	const manuscriptExists = await manuscriptsRepository.existsById(manuscriptId)
+	const manuscriptExists = await manuscriptsRepository.existsById(id)
 	if (!manuscriptExists) {
-		const error = new ManuscriptNotFoundError(manuscriptId)
-		logger.warn(`Manuscript ${manuscriptId} not found`)
+		const error = new ManuscriptNotFoundError(id)
+
+		logger.warn(error.message)
+
 		return reply.status(error.code).send(error.toObject())
 	}
 
 	const paginatedComments = await commentsRepository.findByManuscript({
-		manuscriptId,
+		manuscriptId: id,
 		pagination: { cursor, limit },
 	})
 
@@ -54,7 +56,8 @@ export const getComment = async (
 	const result = commentOption.toResult(new CommentNotFoundError(id))
 
 	if (result.isErr()) {
-		logger.warn(`Comment ${id} not found`)
+		logger.warn(result.error.message)
+
 		return reply.status(result.error.code).send(result.error.toObject())
 	}
 
@@ -63,12 +66,12 @@ export const getComment = async (
 
 export const createComment = async (
 	request: FastifyRequest<{
-		Params: GetManuscriptCommentsParams
+		Params: GetManuscript
 		Body: CreateComment
 	}>,
 	reply: FastifyReply,
 ): Promise<void> => {
-	const { manuscriptId } = request.params
+	const { id } = request.params
 	const { text } = request.body
 	const { commentsRepository, manuscriptsRepository, auth, logger } =
 		request.diScope.cradle
@@ -83,16 +86,17 @@ export const createComment = async (
 		return reply.status(error.code).send(error.toObject())
 	}
 
-	const manuscriptExists = await manuscriptsRepository.existsById(manuscriptId)
+	const manuscriptExists = await manuscriptsRepository.existsById(id)
 
 	if (!manuscriptExists) {
-		const error = new ManuscriptNotFoundError(manuscriptId)
+		const error = new ManuscriptNotFoundError(id)
+
 		return reply.status(error.code).send(error.toObject())
 	}
 
 	const result = await commentsRepository.createOne({
 		text,
-		manuscriptId,
+		manuscriptId: id,
 		authorId: activeMember.id,
 		parentId: null,
 	})
@@ -103,7 +107,7 @@ export const createComment = async (
 	}
 
 	logger.info(
-		`Comment created on manuscript ${manuscriptId} by member ${activeMember.id}`,
+		`Comment created on manuscript ${id} by member ${activeMember.id}`,
 	)
 
 	return reply.status(201).send(result.value)
@@ -181,6 +185,7 @@ export const updateComment = async (
 
 	if (result.isErr()) {
 		logger.error(`Failed to update comment ${id}`)
+
 		return reply.status(result.error.code).send(result.error.toObject())
 	}
 

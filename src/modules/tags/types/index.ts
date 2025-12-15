@@ -4,6 +4,7 @@ import type { HttpError } from '@/core/utils/errors.js'
 import type { Tag } from '@/db/types.js'
 import type { None, Result } from 'ts-results-es'
 import type { CreateTag, UpdateTag } from '../schemas/index.js'
+import type { FindPaginatedArgs, Paginated } from '@/core/types/pagination.js'
 
 interface TagExistsInOrganizationArgs {
 	tagId: string
@@ -14,8 +15,16 @@ interface TagsDiff {
 	tagsToAdd: string[]
 	tagsToRemove: string[]
 }
+
+type FindTagsByOrganizationArgs = FindPaginatedArgs<{
+	organizationId: string
+}>
+
 interface TagsRepository extends Repository<Tag, string> {
 	findAllByOrganization: (organizationId: string) => Promise<Tag[]>
+	findByOrganizationPaginated: (
+		args: FindTagsByOrganizationArgs,
+	) => Promise<Paginated<Tag>>
 	findAllByManuscript: (manuscriptId: string) => Promise<Tag[]>
 	getTagsDiff: (
 		manuscriptId: string,
@@ -41,4 +50,5 @@ export type {
 	TagsDiConfig,
 	TagExistsInOrganizationArgs,
 	TagsDiff,
+	FindTagsByOrganizationArgs,
 }

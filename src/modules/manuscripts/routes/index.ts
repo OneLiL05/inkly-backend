@@ -1,5 +1,6 @@
 import { checkPermissions } from '@/core/middlewares/check-permissions.middleware.js'
 import { isAuthorized } from '@/core/middlewares/is-authorized.middleware.js'
+import { FileSchema } from '@/core/schemas/file.js'
 import type { Routes } from '@/core/types/routes.js'
 import {
 	generateFailedHttpResponse,
@@ -24,7 +25,6 @@ import {
 	ManuscriptModelSchema,
 	UpdateManuscriptSchema,
 } from '../schemas/index.js'
-import { FileSchema } from '@/core/schemas/file.js'
 
 export const getManuscriptsRoutes = (): Routes => ({
 	routes: [

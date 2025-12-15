@@ -1,21 +1,27 @@
 import { DUPLICATE_KEY_ERR_CODE } from '@/core/constants/db.js'
 import { EntityRepository } from '@/core/repositories/entity.repository.js'
+import type { Paginated } from '@/core/types/pagination.js'
 import { InternalServerError, type HttpError } from '@/core/utils/errors.js'
+import {
+	extractPaginationMetadata,
+	toPaginated,
+} from '@/core/utils/pagination.js'
+import { buildExistsQuery, SqlExpressions } from '@/core/utils/sql.js'
+import { manuscriptTagTable } from '@/db/schema/manuscript-tag.js'
 import { tagTable } from '@/db/schema/tag.js'
 import type { Tag } from '@/db/types.js'
-import { and, eq, getTableColumns, SQL } from 'drizzle-orm'
+import { and, desc, eq, getTableColumns, gt, SQL } from 'drizzle-orm'
 import postgres from 'postgres'
 import { Err, None, Ok, type Result } from 'ts-results-es'
 import { TagAlreadyExistsError } from '../errors/index.js'
 import type { CreateTag, UpdateTag } from '../schemas/index.js'
 import type {
+	FindTagsByOrganizationArgs,
 	TagExistsInOrganizationArgs,
 	TagsDiff,
 	TagsInjectableDependencies,
 	TagsRepository,
 } from '../types/index.js'
-import { buildExistsQuery } from '@/core/utils/sql.js'
-import { manuscriptTagTable } from '@/db/schema/manuscript-tag.js'
 
 export class TagsRepositoryImpl
 	extends EntityRepository<Tag, string>
@@ -30,6 +36,32 @@ export class TagsRepositoryImpl
 			.select()
 			.from(tagTable)
 			.where(eq(tagTable.organizationId, organizationId))
+	}
+
+	async findByOrganizationPaginated(
+		args: FindTagsByOrganizationArgs,
+	): Promise<Paginated<Tag>> {
+		const { organizationId, pagination } = args
+		const { cursor, limit } = pagination
+
+		const conditions = new SqlExpressions(
+			eq(tagTable.organizationId, organizationId),
+		)
+
+		if (cursor) {
+			conditions.add(gt(tagTable.createdAt, new Date(cursor)))
+		}
+
+		const rows = await this.db
+			.select()
+			.from(tagTable)
+			.where(and(...conditions.toArray()))
+			.orderBy(desc(tagTable.createdAt))
+			.limit(limit + 1)
+
+		const { data, hasMore, nextCursor } = extractPaginationMetadata(rows, limit)
+
+		return toPaginated({ data, hasMore, nextCursor })
 	}
 
 	async findAllByManuscript(manuscriptId: string): Promise<Tag[]> {
