@@ -1,21 +1,23 @@
 import { checkPermissions } from '@/core/middlewares/check-permissions.middleware.js'
 import { isAuthorized } from '@/core/middlewares/is-authorized.middleware.js'
+import { FileSchema } from '@/core/schemas/index.js'
 import type { Routes } from '@/core/types/routes.js'
 import {
 	generateFailedHttpResponse,
 	generateFailedValidationResponse,
 } from '@/core/utils/schemas.js'
 import z from 'zod'
+import { DOCUMENT_MIME_TYPES } from '../constants/index.js'
 import {
 	createManuscript,
 	deleteManuscript,
 	deleteManuscriptFile,
 	getManuscript,
 	getManuscriptFiles,
-	getOrganizationManuscripts,
 	updateManuscript,
 	updloadManuscriptFile,
 } from '../handlers/index.js'
+import { validateFile } from '../middlewares/validate-file.middleware.js'
 import {
 	CreateManuscriptSchema,
 	GetFileParamsSchema,
@@ -23,9 +25,6 @@ import {
 	ManuscriptModelSchema,
 	UpdateManuscriptSchema,
 } from '../schemas/index.js'
-import { DOCUMENT_MIME_TYPES } from '../constants/index.js'
-import { validateFile } from '../middlewares/validate-file.middleware.js'
-import { FileSchema } from '@/core/schemas/index.js'
 
 export const getManuscriptsRoutes = (): Routes => ({
 	routes: [
@@ -114,29 +113,6 @@ export const getManuscriptsRoutes = (): Routes => ({
 						'User is not authorized to access this manuscript files',
 					),
 					404: generateFailedHttpResponse(404).describe('Manuscript not found'),
-				},
-			},
-		},
-		{
-			method: 'GET',
-			url: '/organizations/:id/manuscripts',
-			handler: getOrganizationManuscripts,
-			preHandler: [isAuthorized, checkPermissions({ manuscript: ['read'] })],
-			schema: {
-				summary: 'Get all Manuscripts in an Organization',
-				description:
-					'Retrieve all manuscripts associated with the organization',
-				tags: ['Manuscripts'],
-				response: {
-					200: z
-						.array(ManuscriptModelSchema)
-						.describe('List of manuscripts in the organization'),
-					401: generateFailedHttpResponse(401).describe(
-						'User is not authenticated',
-					),
-					403: generateFailedHttpResponse(403).describe(
-						'User is not authorized to view manuscripts',
-					),
 				},
 			},
 		},

@@ -1,22 +1,17 @@
+import { checkPermissions } from '@/core/middlewares/check-permissions.middleware.js'
+import { isAuthorized } from '@/core/middlewares/is-authorized.middleware.js'
 import type { Routes } from '@/core/types/routes.js'
 import {
-	createTag,
-	deleteTag,
-	getOrganizationTags,
-	updateTag,
-} from '../handlers/index.js'
-import { isAuthorized } from '@/core/middlewares/is-authorized.middleware.js'
-import { checkPermissions } from '@/core/middlewares/check-permissions.middleware.js'
+	generateFailedHttpResponse,
+	generateFailedValidationResponse,
+} from '@/core/utils/schemas.js'
+import { createTag, deleteTag, updateTag } from '../handlers/index.js'
 import {
 	CreateTagShema,
 	GetTagSchema,
 	TagSchema,
 	UpdateTagSchema,
 } from '../schemas/index.js'
-import {
-	generateFailedHttpResponse,
-	generateFailedValidationResponse,
-} from '@/core/utils/schemas.js'
 import z from 'zod'
 
 export const getTagsRoutes = (): Routes => ({
@@ -44,26 +39,6 @@ export const getTagsRoutes = (): Routes => ({
 					),
 					409: generateFailedHttpResponse(409).describe(
 						'Tag with such name already exists in the organization',
-					),
-				},
-			},
-		},
-		{
-			method: 'GET',
-			url: '/organizations/:id/tags',
-			handler: getOrganizationTags,
-			preHandler: [isAuthorized, checkPermissions({ tag: ['read'] })],
-			schema: {
-				summary: 'Get all Tags in an Organization',
-				description: 'Retrieve all tags associated with the organization',
-				tags: ['Tags'],
-				response: {
-					200: z.array(TagSchema).describe('List of tags in the organization'),
-					401: generateFailedHttpResponse(401).describe(
-						'User is not authenticated',
-					),
-					403: generateFailedHttpResponse(403).describe(
-						'User is not authorized to view tags',
 					),
 				},
 			},
