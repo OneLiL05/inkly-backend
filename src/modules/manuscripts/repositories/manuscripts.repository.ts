@@ -43,6 +43,23 @@ export class ManuscriptsRepositoryImpl
 		return manuscripts
 	}
 
+	async findAllByOrganization(organizationId: string): Promise<Manuscript[]> {
+		const rows = await this.db.query.manuscriptTable.findMany({
+			where: eq(manuscriptTable.organizationId, organizationId),
+			with: {
+				tags: {
+					with: {
+						tag: true,
+					},
+				},
+			},
+		})
+
+		const manuscripts = rows.map(mapManuscriptWithTags)
+
+		return manuscripts
+	}
+
 	override async findById(id: string): Promise<Option<Manuscript>> {
 		const rows = await this.db.query.manuscriptTable.findMany({
 			where: eq(manuscriptTable.id, id),

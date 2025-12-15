@@ -9,6 +9,7 @@ import {
 	type GetManuscript,
 	type UpdateManuscript,
 } from '../schemas/index.js'
+import type { GetOrganization } from '@/modules/organizations/schemas/index.js'
 
 export const getManuscript = async (
 	request: FastifyRequest<{ Params: GetManuscript }>,
@@ -48,6 +49,18 @@ export const getManuscriptFiles = async (
 	const files = await manuscriptsRepository.findFiles(id)
 
 	return reply.status(200).send(files)
+}
+
+export const getOrganizationManuscripts = async (
+	request: FastifyRequest<{ Params: GetOrganization }>,
+	reply: FastifyReply,
+): Promise<void> => {
+	const { id } = request.params
+	const { manuscriptsRepository } = request.diScope.cradle
+
+	const manuscripts = await manuscriptsRepository.findAllByOrganization(id)
+
+	return reply.status(200).send(manuscripts)
 }
 
 export const createManuscript = async (

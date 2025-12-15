@@ -32,6 +32,7 @@ type RawManuscriptWithTagJoin = RawManuscript & {
 type UpdateManuscriptData = Omit<UpdateManuscript, 'tagIds'> & TagsDiff
 
 interface ManuscriptsRepository extends Repository<Manuscript, string> {
+	findAllByOrganization: (organizationId: string) => Promise<Manuscript[]>
 	findFile: (args: FindFileArgs) => Promise<Option<File>>
 	findFiles: (manuscriptId: string) => Promise<File[]>
 	createOne: (data: CreateManuscript) => Promise<Result<Manuscript, HttpError>>
