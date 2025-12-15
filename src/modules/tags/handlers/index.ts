@@ -1,19 +1,6 @@
 import type { FastifyReply, FastifyRequest } from 'fastify'
-import type { CreateTag, GetTag, UpdateTag } from '../schemas/index.js'
 import { TagNotFoundError } from '../errors/index.js'
-import type { GetOrganization } from '@/modules/organizations/schemas/index.js'
-
-export const getOrganizationTags = async (
-	request: FastifyRequest<{ Params: GetOrganization }>,
-	reply: FastifyReply,
-): Promise<void> => {
-	const { id } = request.params
-	const { tagsRepository } = request.diScope.cradle
-
-	const tags = await tagsRepository.findAllByOrganization(id)
-
-	return reply.status(200).send(tags)
-}
+import type { CreateTag, GetTag, UpdateTag } from '../schemas/index.js'
 
 export const createTag = async (
 	request: FastifyRequest<{ Body: CreateTag }>,
@@ -45,11 +32,9 @@ export const updateTag = async (
 	})
 
 	if (!exists) {
-		logger.warn(
-			`Tag with id '${tagId}' not found for update in organization '${organizationId}'`,
-		)
-
 		const error = new TagNotFoundError(tagId)
+
+		logger.warn(error.message)
 
 		return reply.status(error.code).send(error.toObject())
 	}
@@ -78,11 +63,9 @@ export const deleteTag = async (
 	})
 
 	if (!exists) {
-		logger.warn(
-			`Tag with id '${tagId}' not found for deletion in organization '${organizationId}'`,
-		)
-
 		const error = new TagNotFoundError(tagId)
+
+		logger.warn(error.message)
 
 		return reply.status(error.code).send(error.toObject())
 	}
