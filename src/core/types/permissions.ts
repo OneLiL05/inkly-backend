@@ -4,4 +4,4 @@ type PermissionEntity = 'manuscript' | 'tag'
 
 type PermissionsRecord = Record<PermissionEntity, Permission[]>
 
-export type { PermissionsRecord }
+export type { PermissionsRecord, Permission }

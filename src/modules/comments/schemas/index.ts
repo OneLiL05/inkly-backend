@@ -1,0 +1,105 @@
+import {
+	buildPaginatedSchema,
+	CursorPaginationQuerySchema,
+} from '@/core/schemas/index.js'
+import z from 'zod'
+
+const CommentModelSchema = z.strictObject({
+	id: z.uuidv7().describe('Unique identifier of the comment'),
+	createdAt: z.coerce.date().describe('Creation timestamp'),
+	updatedAt: z.coerce.date().describe('Last update timestamp'),
+	text: z.string().min(1).max(2000).describe('Comment text content'),
+	manuscriptId: z.uuidv7().describe('Manuscript identifier'),
+	authorId: z.uuidv7().describe('Author member identifier'),
+	parentId: z
+		.uuidv7()
+		.nullable()
+		.describe('Parent comment identifier for replies'),
+})
+
+const CommentAuthorSchema = z.strictObject({
+	id: z.uuidv7(),
+	name: z.string(),
+	email: z.string().email(),
+	role: z.string(),
+	image: z.string().nullable(),
+})
+
+const CommentWithAuthorSchema = CommentModelSchema.extend({
+	author: CommentAuthorSchema,
+	get replies() {
+		return CommentWithAuthorSchema.array()
+	},
+})
+
+const PaginatedCommentsSchema = buildPaginatedSchema(CommentWithAuthorSchema)
+
+const GetManuscriptCommentsParamsSchema = z.strictObject({
+	manuscriptId: z.uuidv7().describe('Manuscript identifier'),
+})
+
+const GetManuscriptCommentsQuerySchema = CursorPaginationQuerySchema
+
+const CreateCommentSchema = z.strictObject({
+	text: z
+		.string()
+		.min(1, 'Comment text cannot be empty')
+		.max(2000, 'Comment text cannot exceed 2000 characters')
+		.describe('Comment text content'),
+})
+
+const CreateReplyParamsSchema = z.strictObject({
+	manuscriptId: z.uuidv7().describe('Manuscript identifier'),
+	commentId: z.uuidv7().describe('Parent comment identifier'),
+})
+
+const CreateReplySchema = CreateCommentSchema
+
+const GetCommentParamsSchema = z.strictObject({
+	id: z.uuidv7().describe('Comment identifier'),
+})
+
+const UpdateCommentSchema = z.strictObject({
+	text: z
+		.string()
+		.min(1, 'Comment text cannot be empty')
+		.max(2000, 'Comment text cannot exceed 2000 characters')
+		.describe('Updated comment text'),
+})
+
+const DeleteCommentParamsSchema = GetCommentParamsSchema
+
+type CreateComment = z.infer<typeof CreateCommentSchema>
+type GetCommentParams = z.infer<typeof GetCommentParamsSchema>
+type GetManuscriptCommentsParams = z.infer<
+	typeof GetManuscriptCommentsParamsSchema
+>
+type GetManuscriptCommentsQuery = z.infer<
+	typeof GetManuscriptCommentsQuerySchema
+>
+type CreateReplyParams = z.infer<typeof CreateReplyParamsSchema>
+type UpdateComment = z.infer<typeof UpdateCommentSchema>
+
+export {
+	CommentAuthorSchema,
+	CommentModelSchema,
+	CommentWithAuthorSchema,
+	CreateCommentSchema,
+	CreateReplyParamsSchema,
+	CreateReplySchema,
+	DeleteCommentParamsSchema,
+	GetCommentParamsSchema,
+	GetManuscriptCommentsParamsSchema,
+	GetManuscriptCommentsQuerySchema,
+	PaginatedCommentsSchema,
+	UpdateCommentSchema,
+}
+
+export type {
+	CreateComment,
+	CreateReplyParams,
+	GetCommentParams,
+	GetManuscriptCommentsParams,
+	GetManuscriptCommentsQuery,
+	UpdateComment,
+}

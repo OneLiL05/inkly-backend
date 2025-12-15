@@ -4,6 +4,8 @@ import type {
 } from '@/core/types/deps.js'
 import { resolveAuthModule } from '@/modules/auth/index.js'
 import type { AuthModuleDependencies } from '@/modules/auth/types/index.js'
+import { resolveCommentsModule } from '@/modules/comments/index.js'
+import type { CommentsModuleDependencies } from '@/modules/comments/types/index.js'
 import { resolveManuscriptsModule } from '@/modules/manuscripts/index.js'
 import type { ManuscriptsModuleDependencies } from '@/modules/manuscripts/types/index.js'
 import type { OrganizationsModuleDependencies } from '@/modules/organizations/types/index.js'
@@ -17,7 +19,8 @@ type Dependencies = CommonDependencies &
 	AuthModuleDependencies &
 	ManuscriptsModuleDependencies &
 	TagsModuleDependencies &
-	OrganizationsModuleDependencies
+	OrganizationsModuleDependencies &
+	CommentsModuleDependencies
 
 type DiConfig = NameAndRegistrationPair<Dependencies>
 
@@ -31,6 +34,7 @@ export const registerDependencies = (
 		...resolveManuscriptsModule(),
 		...resolveTagsModule(),
 		...resolveOrganizationsModule(),
+		...resolveCommentsModule(),
 	}
 
 	diContainer.register(diConfig)

@@ -1,3 +1,4 @@
+import type { commentTable } from './schema/comment.js'
 import type { fileTable } from './schema/file.js'
 import type { manuscriptTagTable } from './schema/manuscript-tag.js'
 import type { manuscriptTable } from './schema/manuscript.js'
@@ -14,6 +15,7 @@ type Manuscript = RawManuscript & {
 type ManuscriptTag = typeof manuscriptTagTable.$inferSelect
 type File = typeof fileTable.$inferSelect
 type Tag = typeof tagTable.$inferSelect
+type RawComment = typeof commentTable.$inferSelect
 
 export type {
 	File,
@@ -23,4 +25,5 @@ export type {
 	User,
 	RawManuscript,
 	ManuscriptTag,
+	RawComment,
 }
