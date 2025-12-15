@@ -1,4 +1,5 @@
 import { PermissionsError } from '@/core/utils/errors.js'
+import { OrganizationNotFoundError } from '@/modules/organizations/errors/index.js'
 import type { MultipartFile } from '@fastify/multipart'
 import { fromNodeHeaders } from 'better-auth/node'
 import type { FastifyReply, FastifyRequest } from 'fastify'
@@ -9,6 +10,39 @@ import {
 	type GetManuscript,
 	type UpdateManuscript,
 } from '../schemas/index.js'
+import type { GetOrganization } from '@/modules/organizations/schemas/index.js'
+import type { PaginationQuery } from '@/core/schemas/pagination.js'
+
+export const getOrganizationManuscripts = async (
+	request: FastifyRequest<{
+		Params: GetOrganization
+		Querystring: PaginationQuery
+	}>,
+	reply: FastifyReply,
+): Promise<void> => {
+	const { id } = request.params
+	const { cursor, limit } = request.query
+	const { manuscriptsRepository, organizationsRepository, logger } =
+		request.diScope.cradle
+
+	const exists = await organizationsRepository.existsById(id)
+
+	if (!exists) {
+		const error = new OrganizationNotFoundError(id)
+
+		logger.warn(error.message)
+
+		return reply.status(404).send(error.toObject())
+	}
+
+	const paginatedManuscripts =
+		await manuscriptsRepository.findByOrganizationPaginated({
+			organizationId: id,
+			pagination: { cursor, limit },
+		})
+
+	return reply.status(200).send(paginatedManuscripts)
+}
 
 export const getManuscript = async (
 	request: FastifyRequest<{ Params: GetManuscript }>,

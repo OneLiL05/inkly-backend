@@ -5,6 +5,7 @@ import {
 	generateFailedHttpResponse,
 	generateFailedValidationResponse,
 } from '@/core/utils/schemas.js'
+import z from 'zod'
 import { createTag, deleteTag, updateTag } from '../handlers/index.js'
 import {
 	CreateTagShema,
@@ -12,7 +13,6 @@ import {
 	TagSchema,
 	UpdateTagSchema,
 } from '../schemas/index.js'
-import z from 'zod'
 
 export const getTagsRoutes = (): Routes => ({
 	routes: [

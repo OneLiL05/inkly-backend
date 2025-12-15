@@ -1,6 +1,6 @@
 import z, { ZodType } from 'zod'
 
-const CursorPaginationQuerySchema = z.object({
+const PaginationQuerySchema = z.object({
 	cursor: z.string().optional().describe('Cursor for pagination'),
 	limit: z.coerce
 		.number()
@@ -11,20 +11,21 @@ const CursorPaginationQuerySchema = z.object({
 		.describe('Number of items to return'),
 })
 
-const CursorPaginationMetaSchema = z.object({
+type PaginationQuery = z.infer<typeof PaginationQuerySchema>
+
+const PaginationMetaSchema = z.object({
 	nextCursor: z.string().nullable(),
 	hasMore: z.boolean(),
 })
 
+type PaginationMeta = z.infer<typeof PaginationMetaSchema>
+
 const buildPaginatedSchema = (dataSchema: ZodType) => {
 	return z.object({
 		data: z.array(dataSchema),
-		meta: CursorPaginationMetaSchema,
+		meta: PaginationMetaSchema,
 	})
 }
 
-export {
-	buildPaginatedSchema,
-	CursorPaginationMetaSchema,
-	CursorPaginationQuerySchema,
-}
+export { buildPaginatedSchema, PaginationMetaSchema, PaginationQuerySchema }
+export type { PaginationQuery, PaginationMeta }

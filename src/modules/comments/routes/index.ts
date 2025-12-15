@@ -1,10 +1,15 @@
 import { checkPermissions } from '@/core/middlewares/check-permissions.middleware.js'
 import { isAuthorized } from '@/core/middlewares/is-authorized.middleware.js'
+import {
+	buildPaginatedSchema,
+	PaginationQuerySchema,
+} from '@/core/schemas/pagination.js'
 import type { Routes } from '@/core/types/routes.js'
 import {
 	generateFailedHttpResponse,
 	generateFailedValidationResponse,
 } from '@/core/utils/schemas.js'
+import { GetManuscriptParamsSchema } from '@/modules/manuscripts/schemas/index.js'
 import z from 'zod'
 import {
 	createComment,
@@ -18,19 +23,16 @@ import { checkCommentPermissions } from '../middlewares/check-comment-permission
 import {
 	CommentWithAuthorSchema,
 	CreateCommentSchema,
-	GetCommentParamsSchema,
-	GetManuscriptCommentsParamsSchema,
-	GetManuscriptCommentsQuerySchema,
 	CreateReplyParamsSchema,
+	GetCommentParamsSchema,
 	UpdateCommentSchema,
-	PaginatedCommentsSchema,
 } from '../schemas/index.js'
 
 export const getCommentsRoutes = (): Routes => ({
 	routes: [
 		{
 			method: 'GET',
-			url: '/manuscripts/:manuscriptId/comments',
+			url: '/manuscripts/:id/comments',
 			handler: getManuscriptComments,
 			preHandler: [isAuthorized, checkPermissions({ manuscript: ['read'] })],
 			schema: {
@@ -38,10 +40,10 @@ export const getCommentsRoutes = (): Routes => ({
 				description:
 					'Retrieve comments with cursor-based pagination and nested replies for a manuscript. Use the nextCursor from the response to load more comments.',
 				tags: ['Comments'],
-				params: GetManuscriptCommentsParamsSchema,
-				querystring: GetManuscriptCommentsQuerySchema,
+				params: GetManuscriptParamsSchema,
+				querystring: PaginationQuerySchema,
 				response: {
-					200: PaginatedCommentsSchema.describe(
+					200: buildPaginatedSchema(CommentWithAuthorSchema).describe(
 						'Comments retrieved successfully with nextCursor for infinite scroll',
 					),
 					400: generateFailedValidationResponse().describe(
@@ -86,14 +88,14 @@ export const getCommentsRoutes = (): Routes => ({
 		},
 		{
 			method: 'POST',
-			url: '/manuscripts/:manuscriptId/comments',
+			url: '/manuscripts/:id/comments',
 			handler: createComment,
 			preHandler: [isAuthorized, checkPermissions({ manuscript: ['read'] })],
 			schema: {
 				summary: 'Create a comment',
 				description: 'Create a new top-level comment on a manuscript',
 				tags: ['Comments'],
-				params: GetManuscriptCommentsParamsSchema,
+				params: GetManuscriptParamsSchema,
 				body: CreateCommentSchema,
 				response: {
 					201: CommentWithAuthorSchema.describe('Comment created successfully'),

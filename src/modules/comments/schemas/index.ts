@@ -1,10 +1,6 @@
-import {
-	buildPaginatedSchema,
-	CursorPaginationQuerySchema,
-} from '@/core/schemas/pagination.js'
 import z from 'zod'
 
-const CommentModelSchema = z.strictObject({
+const CommentSchema = z.strictObject({
 	id: z.uuidv7().describe('Unique identifier of the comment'),
 	createdAt: z.coerce.date().describe('Creation timestamp'),
 	updatedAt: z.coerce.date().describe('Last update timestamp'),
@@ -25,20 +21,12 @@ const CommentAuthorSchema = z.strictObject({
 	image: z.string().nullable(),
 })
 
-const CommentWithAuthorSchema = CommentModelSchema.extend({
+const CommentWithAuthorSchema = CommentSchema.extend({
 	author: CommentAuthorSchema,
 	get replies() {
 		return CommentWithAuthorSchema.array()
 	},
 })
-
-const PaginatedCommentsSchema = buildPaginatedSchema(CommentWithAuthorSchema)
-
-const GetManuscriptCommentsParamsSchema = z.strictObject({
-	manuscriptId: z.uuidv7().describe('Manuscript identifier'),
-})
-
-const GetManuscriptCommentsQuerySchema = CursorPaginationQuerySchema
 
 const CreateCommentSchema = z.strictObject({
 	text: z
@@ -67,31 +55,19 @@ const UpdateCommentSchema = z.strictObject({
 		.describe('Updated comment text'),
 })
 
-const DeleteCommentParamsSchema = GetCommentParamsSchema
-
 type CreateComment = z.infer<typeof CreateCommentSchema>
 type GetCommentParams = z.infer<typeof GetCommentParamsSchema>
-type GetManuscriptCommentsParams = z.infer<
-	typeof GetManuscriptCommentsParamsSchema
->
-type GetManuscriptCommentsQuery = z.infer<
-	typeof GetManuscriptCommentsQuerySchema
->
 type CreateReplyParams = z.infer<typeof CreateReplyParamsSchema>
 type UpdateComment = z.infer<typeof UpdateCommentSchema>
 
 export {
 	CommentAuthorSchema,
-	CommentModelSchema,
+	CommentSchema,
 	CommentWithAuthorSchema,
 	CreateCommentSchema,
 	CreateReplyParamsSchema,
 	CreateReplySchema,
-	DeleteCommentParamsSchema,
 	GetCommentParamsSchema,
-	GetManuscriptCommentsParamsSchema,
-	GetManuscriptCommentsQuerySchema,
-	PaginatedCommentsSchema,
 	UpdateCommentSchema,
 }
 
@@ -99,7 +75,5 @@ export type {
 	CreateComment,
 	CreateReplyParams,
 	GetCommentParams,
-	GetManuscriptCommentsParams,
-	GetManuscriptCommentsQuery,
 	UpdateComment,
 }

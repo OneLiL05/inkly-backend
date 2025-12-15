@@ -1,12 +1,17 @@
+import type { PaginationQuery } from '@/core/schemas/pagination.js'
 import type { FastifyReply, FastifyRequest } from 'fastify'
-import type { GetOrganization } from '../schemas/index.js'
 import { OrganizationNotFoundError } from '../errors/index.js'
+import type { GetOrganization } from '../schemas/index.js'
 
 export const getOrganizationManuscripts = async (
-	request: FastifyRequest<{ Params: GetOrganization }>,
+	request: FastifyRequest<{
+		Params: GetOrganization
+		Querystring: PaginationQuery
+	}>,
 	reply: FastifyReply,
 ): Promise<void> => {
 	const { id } = request.params
+	const { cursor, limit } = request.query
 	const { manuscriptsRepository, organizationsRepository, logger } =
 		request.diScope.cradle
 
@@ -20,22 +25,29 @@ export const getOrganizationManuscripts = async (
 		return reply.status(404).send(error.toObject())
 	}
 
-	const manuscripts = await manuscriptsRepository.findAllByOrganization(id)
+	const manuscripts = await manuscriptsRepository.findByOrganizationPaginated({
+		organizationId: id,
+		pagination: { cursor, limit },
+	})
 
 	return reply.status(200).send(manuscripts)
 }
 
 export const getOrganizationTags = async (
-	request: FastifyRequest<{ Params: GetOrganization }>,
+	request: FastifyRequest<{
+		Params: GetOrganization
+		Querystring: PaginationQuery
+	}>,
 	reply: FastifyReply,
 ): Promise<void> => {
 	const { id } = request.params
+	const { cursor, limit } = request.query
 	const { tagsRepository, organizationsRepository, logger } =
 		request.diScope.cradle
 
-	const exists = await organizationsRepository.existsById(id)
+	const organizationExists = await organizationsRepository.existsById(id)
 
-	if (!exists) {
+	if (!organizationExists) {
 		const error = new OrganizationNotFoundError(id)
 
 		logger.warn(error.message)
@@ -43,7 +55,10 @@ export const getOrganizationTags = async (
 		return reply.status(404).send(error.toObject())
 	}
 
-	const tags = await tagsRepository.findAllByOrganization(id)
+	const tags = await tagsRepository.findByOrganizationPaginated({
+		organizationId: id,
+		pagination: { cursor, limit },
+	})
 
 	return reply.status(200).send(tags)
 }

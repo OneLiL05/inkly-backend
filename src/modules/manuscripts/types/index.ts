@@ -11,6 +11,7 @@ import type {
 import type { None, Option, Result } from 'ts-results-es'
 import type { CreateManuscript, UpdateManuscript } from '../schemas/index.js'
 import type { TagsDiff } from '@/modules/tags/types/index.js'
+import type { FindPaginatedArgs, Paginated } from '@/core/types/pagination.js'
 
 interface UploadFileArgs {
 	fileBuffer: Buffer
@@ -31,8 +32,15 @@ type RawManuscriptWithTagJoin = RawManuscript & {
 
 type UpdateManuscriptData = Omit<UpdateManuscript, 'tagIds'> & TagsDiff
 
+type FindManuscriptsByOrganizationArgs = FindPaginatedArgs<{
+	organizationId: string
+}>
+
 interface ManuscriptsRepository extends Repository<Manuscript, string> {
 	findAllByOrganization: (organizationId: string) => Promise<Manuscript[]>
+	findByOrganizationPaginated: (
+		args: FindManuscriptsByOrganizationArgs,
+	) => Promise<Paginated<Manuscript>>
 	findFile: (args: FindFileArgs) => Promise<Option<File>>
 	findFiles: (manuscriptId: string) => Promise<File[]>
 	createOne: (data: CreateManuscript) => Promise<Result<Manuscript, HttpError>>
@@ -64,4 +72,5 @@ export type {
 	RawManuscriptWithTagJoin,
 	UpdateManuscriptData,
 	UploadFileArgs,
+	FindManuscriptsByOrganizationArgs,
 }

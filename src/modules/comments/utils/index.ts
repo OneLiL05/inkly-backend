@@ -1,4 +1,4 @@
-import type { CommentAuthor, RawCommentWithAuthorJoin } from '@/db/types.js'
+import type { CommentAuthor, RawCommentWithAuthorJoin } from '../types/index.js'
 
 export const mapCommentAuthor = (
 	member: RawCommentWithAuthorJoin['author'],

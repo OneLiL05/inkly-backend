@@ -96,4 +96,5 @@ export type {
 	CreateCommentData,
 	FindCommentsByManuscriptArgs,
 	RawCommentWithAuthorJoin,
+	CommentAuthor,
 }
