@@ -1,4 +1,4 @@
-import { pgTable } from 'drizzle-orm/pg-core'
+import { pgTable, type AnyPgColumn } from 'drizzle-orm/pg-core'
 import { baseTableAttrs } from '../utils.js'
 import { memberTable } from './member.js'
 import { manuscriptTable } from './manuscript.js'
@@ -15,6 +15,9 @@ export const commentTable = pgTable('comment', (t) => ({
 		.uuid()
 		.notNull()
 		.references(() => memberTable.id, { onDelete: 'cascade' }),
+	parentId: t
+		.uuid()
+		.references((): AnyPgColumn => commentTable.id, { onDelete: 'cascade' }),
 }))
 
 export const commentTableRelations = relations(commentTable, ({ one }) => ({

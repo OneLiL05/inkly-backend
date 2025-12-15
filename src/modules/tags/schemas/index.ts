@@ -1,4 +1,4 @@
-import { HexSchema } from '@/core/schemas/index.js'
+import { HexSchema } from '@/core/schemas/common.js'
 import z from 'zod'
 
 const TagSchema = z.object({
