@@ -3,6 +3,7 @@ import type { fileTable } from './schema/file.js'
 import type { manuscriptTagTable } from './schema/manuscript-tag.js'
 import type { manuscriptTable } from './schema/manuscript.js'
 import type { organizationTable } from './schema/organization.js'
+import type { publishingStageTable } from './schema/publishing-stage.js'
 import type { tagTable } from './schema/tag.js'
 import type { userTable } from './schema/user.js'
 
@@ -16,11 +17,13 @@ type ManuscriptTag = typeof manuscriptTagTable.$inferSelect
 type File = typeof fileTable.$inferSelect
 type Tag = typeof tagTable.$inferSelect
 type RawComment = typeof commentTable.$inferSelect
+type PublishingStage = typeof publishingStageTable.$inferSelect
 
 export type {
 	File,
 	Manuscript,
 	Organization,
+	PublishingStage,
 	Tag,
 	User,
 	RawManuscript,

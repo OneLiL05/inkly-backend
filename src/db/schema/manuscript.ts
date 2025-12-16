@@ -4,6 +4,7 @@ import { baseTableAttrs } from '../utils.js'
 import { commentTable } from './comment.js'
 import { manuscriptTagTable } from './manuscript-tag.js'
 import { organizationTable } from './organization.js'
+import { publishingStageTable } from './publishing-stage.js'
 
 export const manuscriptTable = pgTable(
 	'manuscript',
@@ -37,5 +38,6 @@ export const manuscriptTableRelations = relations(
 		}),
 		tags: many(manuscriptTagTable),
 		comments: many(commentTable),
+		publishingStages: many(publishingStageTable),
 	}),
 )

@@ -2,6 +2,7 @@ import { HealthCheckSchema } from '@/core/schemas/common.js'
 import type { Routes } from '@/core/types/routes.js'
 import { getCommentsRoutes } from './comments/routes/index.js'
 import { getManuscriptsRoutes } from './manuscripts/routes/index.js'
+import { getPublishingStagesRoutes } from './publishing-stages/routes/index.js'
 import { getTagsRoutes } from './tags/routes/index.js'
 import { getOrganizationRoutes } from './organizations/routes/index.js'
 
@@ -32,6 +33,7 @@ export const getRoutes = (): Routes => {
 			...getTagsRoutes().routes,
 			...getOrganizationRoutes().routes,
 			...getCommentsRoutes().routes,
+			...getPublishingStagesRoutes().routes,
 		],
 	}
 }
