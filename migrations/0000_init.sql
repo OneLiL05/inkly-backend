@@ -31,7 +31,8 @@ CREATE TABLE "comment" (
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"text" text NOT NULL,
 	"manuscript_id" uuid NOT NULL,
-	"author_id" uuid NOT NULL
+	"author_id" uuid NOT NULL,
+	"parent_id" uuid
 );
 --> statement-breakpoint
 CREATE TABLE "file" (
@@ -73,7 +74,8 @@ CREATE TABLE "manuscript" (
 	"publication_type" varchar NOT NULL,
 	"language" varchar NOT NULL,
 	"status" varchar NOT NULL,
-	"organization_id" uuid NOT NULL
+	"organization_id" uuid NOT NULL,
+	CONSTRAINT "manuscript_name_org_uidx" UNIQUE("name","organization_id")
 );
 --> statement-breakpoint
 CREATE TABLE "member" (
@@ -102,6 +104,7 @@ CREATE TABLE "publishing_stage" (
 	"name" varchar NOT NULL,
 	"description" text,
 	"completed_by" uuid,
+	"created_by" uuid NOT NULL,
 	"manuscript_id" uuid NOT NULL
 );
 --> statement-breakpoint
@@ -120,9 +123,12 @@ CREATE TABLE "session" (
 --> statement-breakpoint
 CREATE TABLE "tag" (
 	"id" uuid PRIMARY KEY DEFAULT uuidv7() NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"name" varchar NOT NULL,
 	"color" varchar NOT NULL,
-	CONSTRAINT "tag_name_unique" UNIQUE("name")
+	"organization_id" uuid NOT NULL,
+	CONSTRAINT "tag_name_unique" UNIQUE("name"),
+	CONSTRAINT "tag_name_org_uidx" UNIQUE("name","organization_id")
 );
 --> statement-breakpoint
 CREATE TABLE "user" (
@@ -158,6 +164,7 @@ ALTER TABLE "account" ADD CONSTRAINT "account_user_id_user_id_fk" FOREIGN KEY ("
 ALTER TABLE "activity_log" ADD CONSTRAINT "activity_log_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "comment" ADD CONSTRAINT "comment_manuscript_id_manuscript_id_fk" FOREIGN KEY ("manuscript_id") REFERENCES "public"."manuscript"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "comment" ADD CONSTRAINT "comment_author_id_member_id_fk" FOREIGN KEY ("author_id") REFERENCES "public"."member"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "comment" ADD CONSTRAINT "comment_parent_id_comment_id_fk" FOREIGN KEY ("parent_id") REFERENCES "public"."comment"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "file" ADD CONSTRAINT "file_uploaded_by_member_id_fk" FOREIGN KEY ("uploaded_by") REFERENCES "public"."member"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "file" ADD CONSTRAINT "file_manuscript_id_manuscript_id_fk" FOREIGN KEY ("manuscript_id") REFERENCES "public"."manuscript"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "invitation" ADD CONSTRAINT "invitation_organization_id_organization_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -168,8 +175,10 @@ ALTER TABLE "manuscript" ADD CONSTRAINT "manuscript_organization_id_organization
 ALTER TABLE "member" ADD CONSTRAINT "member_organization_id_organization_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "member" ADD CONSTRAINT "member_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "publishing_stage" ADD CONSTRAINT "publishing_stage_completed_by_member_id_fk" FOREIGN KEY ("completed_by") REFERENCES "public"."member"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "publishing_stage" ADD CONSTRAINT "publishing_stage_created_by_member_id_fk" FOREIGN KEY ("created_by") REFERENCES "public"."member"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "publishing_stage" ADD CONSTRAINT "publishing_stage_manuscript_id_manuscript_id_fk" FOREIGN KEY ("manuscript_id") REFERENCES "public"."manuscript"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "session" ADD CONSTRAINT "session_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "tag" ADD CONSTRAINT "tag_organization_id_organization_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
 CREATE INDEX "account_user_id_idx" ON "account" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "activity_log_user_idx" ON "activity_log" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "activity_log_action_idx" ON "activity_log" USING btree ("action");--> statement-breakpoint
