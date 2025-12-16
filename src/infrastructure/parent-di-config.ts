@@ -9,6 +9,8 @@ import type { CommentsModuleDependencies } from '@/modules/comments/types/index.
 import { resolveManuscriptsModule } from '@/modules/manuscripts/index.js'
 import type { ManuscriptsModuleDependencies } from '@/modules/manuscripts/types/index.js'
 import type { OrganizationsModuleDependencies } from '@/modules/organizations/types/index.js'
+import { resolvePublishingStagesModule } from '@/modules/publishing-stages/index.js'
+import type { PublishingStagesModuleDependencies } from '@/modules/publishing-stages/types/index.js'
 import { resolveTagsModule } from '@/modules/tags/index.js'
 import type { TagsModuleDependencies } from '@/modules/tags/types/index.js'
 import type { AwilixContainer, NameAndRegistrationPair } from 'awilix'
@@ -20,7 +22,8 @@ type Dependencies = CommonDependencies &
 	ManuscriptsModuleDependencies &
 	TagsModuleDependencies &
 	OrganizationsModuleDependencies &
-	CommentsModuleDependencies
+	CommentsModuleDependencies &
+	PublishingStagesModuleDependencies
 
 type DiConfig = NameAndRegistrationPair<Dependencies>
 
@@ -35,6 +38,7 @@ export const registerDependencies = (
 		...resolveTagsModule(),
 		...resolveOrganizationsModule(),
 		...resolveCommentsModule(),
+		...resolvePublishingStagesModule(),
 	}
 
 	diContainer.register(diConfig)
