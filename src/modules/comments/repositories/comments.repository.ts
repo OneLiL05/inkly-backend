@@ -3,7 +3,7 @@ import { InternalServerError } from '@/core/utils/errors.js'
 import { buildExistsQuery, SqlExpressions } from '@/core/utils/sql.js'
 import { commentTable } from '@/db/schema/comment.js'
 import { manuscriptTable } from '@/db/schema/manuscript.js'
-import { and, asc, desc, eq, isNull, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, gt, isNull, sql } from 'drizzle-orm'
 import { Err, None, Ok, Some, type Option, type Result } from 'ts-results-es'
 import type { HttpError } from '@/core/utils/errors.js'
 import type {
@@ -19,6 +19,7 @@ import type {
 import type { UpdateComment } from '../schemas/index.js'
 import { mapCommentAuthor } from '../utils/index.js'
 import type { Paginated } from '@/core/types/pagination.js'
+import { extractPaginationMetadata } from '@/core/utils/pagination.js'
 
 export class CommentsRepositoryImpl
 	extends EntityRepository<Comment, string>
@@ -40,7 +41,7 @@ export class CommentsRepositoryImpl
 		)
 
 		if (cursor) {
-			conditions.add(sql`${commentTable.createdAt} < ${new Date(cursor)}`)
+			conditions.add(gt(commentTable.createdAt, new Date(cursor)))
 		}
 
 		const rows = await this.db.query.commentTable.findMany({
@@ -56,13 +57,10 @@ export class CommentsRepositoryImpl
 			limit: limit + 1,
 		})
 
-		const { items, hasMore, nextCursor } = this.extractPaginationMetadata(
-			rows,
-			limit,
-		)
+		const { data, hasMore, nextCursor } = extractPaginationMetadata(rows, limit)
 
 		const comments = await Promise.all(
-			items.map((row) => this.buildCommentTree(row)),
+			data.map((row) => this.buildCommentTree(row)),
 		)
 
 		return {
@@ -72,24 +70,6 @@ export class CommentsRepositoryImpl
 				hasMore,
 			},
 		}
-	}
-
-	private extractPaginationMetadata(
-		rows: RawCommentWithAuthorJoin[],
-		limit: number,
-	): {
-		items: RawCommentWithAuthorJoin[]
-		hasMore: boolean
-		nextCursor: string | null
-	} {
-		const hasMore = rows.length > limit
-		const items = hasMore ? rows.slice(0, limit) : rows
-		const nextCursor =
-			hasMore && items.length > 0
-				? items[items.length - 1]!.createdAt.toISOString()
-				: null
-
-		return { items, hasMore, nextCursor }
 	}
 
 	private async buildCommentTree(
