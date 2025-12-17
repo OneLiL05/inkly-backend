@@ -16,6 +16,8 @@ import type { TagsModuleDependencies } from '@/modules/tags/types/index.js'
 import type { AwilixContainer, NameAndRegistrationPair } from 'awilix'
 import { resolveCommonDiConfig } from './common-di-config.js'
 import { resolveOrganizationsModule } from '@/modules/organizations/index.js'
+import type { ActivityLogModuleDependencies } from '@/modules/activity-log/types/index.js'
+import { resolveActivityLogModule } from '@/modules/activity-log/index.js'
 
 type Dependencies = CommonDependencies &
 	AuthModuleDependencies &
@@ -23,7 +25,8 @@ type Dependencies = CommonDependencies &
 	TagsModuleDependencies &
 	OrganizationsModuleDependencies &
 	CommentsModuleDependencies &
-	PublishingStagesModuleDependencies
+	PublishingStagesModuleDependencies &
+	ActivityLogModuleDependencies
 
 type DiConfig = NameAndRegistrationPair<Dependencies>
 
@@ -39,6 +42,7 @@ export const registerDependencies = (
 		...resolveOrganizationsModule(),
 		...resolveCommentsModule(),
 		...resolvePublishingStagesModule(),
+		...resolveActivityLogModule(),
 	}
 
 	diContainer.register(diConfig)
