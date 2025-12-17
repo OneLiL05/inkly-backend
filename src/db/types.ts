@@ -1,3 +1,4 @@
+import type { activityLogTable } from './schema/activity-log.js'
 import type { commentTable } from './schema/comment.js'
 import type { fileTable } from './schema/file.js'
 import type { manuscriptTagTable } from './schema/manuscript-tag.js'
@@ -18,6 +19,7 @@ type File = typeof fileTable.$inferSelect
 type Tag = typeof tagTable.$inferSelect
 type RawComment = typeof commentTable.$inferSelect
 type PublishingStage = typeof publishingStageTable.$inferSelect
+type Log = typeof activityLogTable.$inferSelect
 
 export type {
 	File,
@@ -29,4 +31,5 @@ export type {
 	RawManuscript,
 	ManuscriptTag,
 	RawComment,
+	Log,
 }

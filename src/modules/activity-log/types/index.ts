@@ -1,6 +1,7 @@
 import type { Entity } from '@/core/constants/entities.js'
 import type { BaseDiConfig } from '@/core/types/deps.js'
 import type { ActivityAction, LogSeverity } from '../constants/index.js'
+import type { Log } from '@/db/types.js'
 
 interface LogData {
 	entity: Entity
@@ -15,8 +16,13 @@ type ActivityLog = {
 	) => Promise<void>
 }
 
+interface ActivityLogRepository {
+	retirieveAll: () => Promise<Log[]>
+}
+
 interface ActivityLogModuleDependencies {
 	activityLog: ActivityLog
+	activityLogRepository: ActivityLogRepository
 }
 
 type ActivityLogDiConfig = BaseDiConfig<ActivityLogModuleDependencies>

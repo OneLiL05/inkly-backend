@@ -5,6 +5,7 @@ import { getManuscriptsRoutes } from './manuscripts/routes/index.js'
 import { getPublishingStagesRoutes } from './publishing-stages/routes/index.js'
 import { getTagsRoutes } from './tags/routes/index.js'
 import { getOrganizationRoutes } from './organizations/routes/index.js'
+import { getActivityLogRoutes } from './activity-log/routes/index.js'
 
 export const getRoutes = (): Routes => {
 	return {
@@ -34,6 +35,7 @@ export const getRoutes = (): Routes => {
 			...getOrganizationRoutes().routes,
 			...getCommentsRoutes().routes,
 			...getPublishingStagesRoutes().routes,
+			...getActivityLogRoutes().routes,
 		],
 	}
 }
