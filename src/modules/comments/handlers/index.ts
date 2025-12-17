@@ -207,7 +207,7 @@ export const updateComment = async (
 	if (result.isErr()) {
 		logger.error(`Failed to update comment ${id}`)
 
-		activityLog.logUpdate({
+		await activityLog.logUpdate({
 			entity: ENTITY.COMMENT,
 			severity: LOG_SEVERITY.ERROR,
 			description: `Failed to update comment ${id}: ${result.error.message}`,
@@ -219,7 +219,7 @@ export const updateComment = async (
 
 	logger.info(`Comment ${id} updated`)
 
-	activityLog.logUpdate({
+	await activityLog.logUpdate({
 		entity: ENTITY.COMMENT,
 		severity: LOG_SEVERITY.INFO,
 		description: `Comment ${id} updated successfully`,
@@ -240,7 +240,7 @@ export const deleteComment = async (
 
 	logger.info(`Comment ${id} deleted`)
 
-	activityLog.logDelete({
+	await activityLog.logDelete({
 		entity: ENTITY.COMMENT,
 		severity: LOG_SEVERITY.INFO,
 		description: `Comment ${id} deleted successfully`,

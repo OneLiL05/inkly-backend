@@ -2,6 +2,7 @@ const ACTIVITY_ACTION = {
 	INSERT: 'insert',
 	UPDATE: 'update',
 	DELETE: 'delete',
+	UPLOAD: 'upload',
 } as const
 
 const LOG_SEVERITY = {

@@ -5,6 +5,7 @@ const ENTITY = {
 	ORGANIZATION: 'organization',
 	COMMENT: 'comment',
 	PUBLISHING_STAGE: 'publishing_stage',
+	FILE: 'file',
 } as const
 
 type Entity = (typeof ENTITY)[keyof typeof ENTITY]
