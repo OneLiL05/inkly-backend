@@ -10,6 +10,8 @@ import type {
 	UpdatePublishingStage,
 } from '../schemas/index.js'
 import type { GetManuscript } from '@/modules/manuscripts/schemas/index.js'
+import { ENTITY } from '@/core/constants/entities.js'
+import { LOG_SEVERITY } from '@/modules/activity-log/constants/index.js'
 
 export const getManuscriptPublishingStages = async (
 	request: FastifyRequest<{
@@ -19,7 +21,7 @@ export const getManuscriptPublishingStages = async (
 	reply: FastifyReply,
 ): Promise<void> => {
 	const { id } = request.params
-	const { cursor, limit = 20 } = request.query
+	const { cursor, limit } = request.query
 	const { publishingStagesRepository, manuscriptsRepository, logger } =
 		request.diScope.cradle
 
@@ -69,8 +71,13 @@ export const createPublishingStage = async (
 	reply: FastifyReply,
 ): Promise<void> => {
 	const { id } = request.params
-	const { publishingStagesRepository, manuscriptsRepository, auth, logger } =
-		request.diScope.cradle
+	const {
+		publishingStagesRepository,
+		manuscriptsRepository,
+		auth,
+		logger,
+		activityLog,
+	} = request.diScope.cradle
 
 	const activeMember = await auth.api.getActiveMember({
 		headers: fromNodeHeaders(request.headers),
@@ -87,6 +94,15 @@ export const createPublishingStage = async (
 	if (!manuscriptExists) {
 		const error = new ManuscriptNotFoundError(id)
 
+		logger.error(error.message)
+
+		await activityLog.logInsert({
+			entity: ENTITY.PUBLISHING_STAGE,
+			severity: LOG_SEVERITY.ERROR,
+			description: `Manuscript '${id}' not found for publishing stage creation`,
+			performedBy: request.userId as string,
+		})
+
 		return reply.status(error.code).send(error.toObject())
 	}
 
@@ -98,12 +114,27 @@ export const createPublishingStage = async (
 
 	if (result.isErr()) {
 		logger.error(`Failed to create publishing stage: ${result.error.message}`)
+
+		await activityLog.logInsert({
+			entity: ENTITY.PUBLISHING_STAGE,
+			severity: LOG_SEVERITY.ERROR,
+			description: `Failed to create publishing stage on manuscript '${id}': ${result.error.message}`,
+			performedBy: request.userId as string,
+		})
+
 		return reply.status(result.error.code).send(result.error.toObject())
 	}
 
 	logger.info(
 		`Publishing stage created on manuscript ${id} by member ${activeMember.id}`,
 	)
+
+	await activityLog.logInsert({
+		entity: ENTITY.PUBLISHING_STAGE,
+		severity: LOG_SEVERITY.INFO,
+		description: `Publishing stage created on manuscript '${id}'`,
+		performedBy: request.userId as string,
+	})
 
 	return reply.status(201).send(result.value)
 }
@@ -117,7 +148,8 @@ export const updatePublishingStage = async (
 ): Promise<void> => {
 	const { id } = request.params
 	const { name, description, deadlineAt, finishedAt } = request.body
-	const { publishingStagesRepository, auth, logger } = request.diScope.cradle
+	const { publishingStagesRepository, auth, logger, activityLog } =
+		request.diScope.cradle
 
 	const activeMember = await auth.api.getActiveMember({
 		headers: fromNodeHeaders(request.headers),
@@ -136,9 +168,25 @@ export const updatePublishingStage = async (
 		finishedAt,
 	}
 
+	const stageOption = await publishingStagesRepository.findById(id)
+
+	if (stageOption.isNone()) {
+		const error = new PublishingStageNotFoundError(id)
+
+		logger.error(error.message)
+
+		await activityLog.logUpdate({
+			entity: ENTITY.PUBLISHING_STAGE,
+			severity: LOG_SEVERITY.ERROR,
+			description: `Publishing stage '${id}' not found for update`,
+			performedBy: request.userId as string,
+		})
+
+		return reply.status(error.code).send(error.toObject())
+	}
+
 	if (finishedAt) {
-		const stageOption = await publishingStagesRepository.findById(id)
-		const stage = stageOption.unwrap()
+		const stage = stageOption.value
 
 		if (!stage.finishedAt) {
 			updateData.completedBy = activeMember.id
@@ -150,10 +198,24 @@ export const updatePublishingStage = async (
 	if (result.isErr()) {
 		logger.error(`Failed to update publishing stage ${id}`)
 
+		await activityLog.logUpdate({
+			entity: ENTITY.PUBLISHING_STAGE,
+			severity: LOG_SEVERITY.ERROR,
+			description: `Failed to update publishing stage ${id}: ${result.error.message}`,
+			performedBy: request.userId as string,
+		})
+
 		return reply.status(result.error.code).send(result.error.toObject())
 	}
 
 	logger.info(`Publishing stage ${id} updated`)
+
+	await activityLog.logUpdate({
+		entity: ENTITY.PUBLISHING_STAGE,
+		severity: LOG_SEVERITY.INFO,
+		description: `Publishing stage '${id}' updated successfully`,
+		performedBy: request.userId as string,
+	})
 
 	return reply.status(204).send()
 }
@@ -163,11 +225,36 @@ export const deletePublishingStage = async (
 	reply: FastifyReply,
 ): Promise<void> => {
 	const { id } = request.params
-	const { publishingStagesRepository, logger } = request.diScope.cradle
+	const { publishingStagesRepository, logger, activityLog } =
+		request.diScope.cradle
+
+	const exists = await publishingStagesRepository.existsById(id)
+
+	if (!exists) {
+		const error = new PublishingStageNotFoundError(id)
+
+		logger.error(`Publishing stage with id '${id}' not found`)
+
+		await activityLog.logDelete({
+			entity: ENTITY.PUBLISHING_STAGE,
+			severity: LOG_SEVERITY.ERROR,
+			description: `Publishing stage '${id}' not found for deletion`,
+			performedBy: request.userId as string,
+		})
+
+		return reply.status(error.code).send(error.toObject())
+	}
 
 	await publishingStagesRepository.deleteById(id)
 
 	logger.info(`Publishing stage ${id} deleted`)
+
+	await activityLog.logDelete({
+		entity: ENTITY.PUBLISHING_STAGE,
+		severity: LOG_SEVERITY.INFO,
+		description: `Publishing stage '${id}' deleted successfully`,
+		performedBy: request.userId as string,
+	})
 
 	return reply.status(204).send()
 }

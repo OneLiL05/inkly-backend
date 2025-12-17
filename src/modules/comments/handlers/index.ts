@@ -25,7 +25,7 @@ export const getManuscriptComments = async (
 	reply: FastifyReply,
 ): Promise<void> => {
 	const { id } = request.params
-	const { cursor, limit = 20 } = request.query
+	const { cursor, limit } = request.query
 	const { commentsRepository, manuscriptsRepository, logger } =
 		request.diScope.cradle
 
