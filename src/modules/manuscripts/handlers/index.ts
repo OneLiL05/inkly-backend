@@ -12,6 +12,8 @@ import {
 } from '../schemas/index.js'
 import type { GetOrganization } from '@/modules/organizations/schemas/index.js'
 import type { PaginationQuery } from '@/core/schemas/pagination.js'
+import { ENTITY } from '@/core/constants/entities.js'
+import { LOG_SEVERITY } from '@/modules/activity-log/constants/index.js'
 
 export const getOrganizationManuscripts = async (
 	request: FastifyRequest<{
@@ -88,15 +90,29 @@ export const createManuscript = async (
 	request: FastifyRequest<{ Body: CreateManuscript }>,
 	reply: FastifyReply,
 ): Promise<void> => {
-	const { manuscriptsRepository, logger } = request.diScope.cradle
+	const { manuscriptsRepository, logger, activityLog } = request.diScope.cradle
 
 	const result = await manuscriptsRepository.createOne(request.body)
 
 	if (result.isErr()) {
 		logger.error(`Failed to create manuscript: ${result.error.message}`)
 
+		await activityLog.logInsert({
+			entity: ENTITY.MANUSCRIPT,
+			severity: LOG_SEVERITY.ERROR,
+			description: `Failed to create manuscript in organization '${request.body.organizationId}': ${result.error.message}`,
+			performedBy: request.userId as string,
+		})
+
 		return reply.status(result.error.code).send(result.error.toObject())
 	}
+
+	await activityLog.logInsert({
+		entity: ENTITY.MANUSCRIPT,
+		severity: LOG_SEVERITY.INFO,
+		description: `Manuscript created in organization '${request.body.organizationId}'`,
+		performedBy: request.userId as string,
+	})
 
 	logger.info(
 		`New manuscript in organization '${request.body.organizationId}' created`,
@@ -113,7 +129,7 @@ export const updateManuscript = async (
 	reply: FastifyReply,
 ): Promise<void> => {
 	const { id } = request.params
-	const { manuscriptsRepository, logger, tagsRepository } =
+	const { manuscriptsRepository, logger, tagsRepository, activityLog } =
 		request.diScope.cradle
 
 	const exists = await manuscriptsRepository.existsById(id)
@@ -122,6 +138,13 @@ export const updateManuscript = async (
 		const error = new ManuscriptNotFoundError(id)
 
 		logger.warn(`Manuscript with id '${id}' not found`)
+
+		await activityLog.logUpdate({
+			entity: ENTITY.MANUSCRIPT,
+			severity: LOG_SEVERITY.ERROR,
+			description: `Manuscript '${id}' not found for update`,
+			performedBy: request.userId as string,
+		})
 
 		return reply.status(error.code).send(error.toObject())
 	}
@@ -141,6 +164,13 @@ export const updateManuscript = async (
 
 	logger.info(`Manuscript with id '${id}' updated`)
 
+	await activityLog.logUpdate({
+		entity: ENTITY.MANUSCRIPT,
+		severity: LOG_SEVERITY.INFO,
+		description: `Manuscript '${id}' successfully updated`,
+		performedBy: request.userId as string,
+	})
+
 	return reply.status(204).send()
 }
 
@@ -149,7 +179,7 @@ export const deleteManuscript = async (
 	reply: FastifyReply,
 ): Promise<void> => {
 	const { id } = request.params
-	const { manuscriptsRepository, logger } = request.diScope.cradle
+	const { manuscriptsRepository, logger, activityLog } = request.diScope.cradle
 
 	const exists = await manuscriptsRepository.existsById(id)
 
@@ -157,6 +187,13 @@ export const deleteManuscript = async (
 		const error = new ManuscriptNotFoundError(id)
 
 		logger.warn(`Manuscript with id '${id}' not found`)
+
+		await activityLog.logDelete({
+			entity: ENTITY.MANUSCRIPT,
+			severity: LOG_SEVERITY.ERROR,
+			description: `Manuscript '${id}' not found for deletion`,
+			performedBy: request.userId as string,
+		})
 
 		return reply.status(error.code).send(error.toObject())
 	}
@@ -173,18 +210,22 @@ export const deleteManuscriptFile = async (
 	reply: FastifyReply,
 ): Promise<void> => {
 	const { manuscriptId, fileId } = request.params
-	const { fileUploadService, manuscriptsRepository } = request.diScope.cradle
+	const { fileUploadService, manuscriptsRepository, activityLog } =
+		request.diScope.cradle
 
-	const manuscriptOption = await manuscriptsRepository.findById(manuscriptId)
+	const exists = await manuscriptsRepository.existsById(manuscriptId)
 
-	const manuscriptResult = manuscriptOption.toResult(
-		new ManuscriptNotFoundError(manuscriptId),
-	)
+	if (!exists) {
+		const error = new ManuscriptNotFoundError(manuscriptId)
 
-	if (manuscriptResult.isErr()) {
-		return reply
-			.status(manuscriptResult.error.code)
-			.send(manuscriptResult.error.toObject())
+		await activityLog.logDelete({
+			entity: ENTITY.FILE,
+			severity: LOG_SEVERITY.ERROR,
+			description: `Manuscript '${manuscriptId}' not found for deletion`,
+			performedBy: request.userId as string,
+		})
+
+		return reply.status(error.code).send(error.toObject())
 	}
 
 	const fileOption = await manuscriptsRepository.findFile({
@@ -197,16 +238,37 @@ export const deleteManuscriptFile = async (
 	)
 
 	if (fileResult.isErr()) {
+		await activityLog.logDelete({
+			entity: ENTITY.FILE,
+			severity: LOG_SEVERITY.ERROR,
+			description: `File '${fileId}' not found for deletion in manuscript '${manuscriptId}'`,
+			performedBy: request.userId as string,
+		})
+
 		return reply.status(fileResult.error.code).send(fileResult.error.toObject())
 	}
 
 	const deleteResult = await fileUploadService.deleteFile(fileId)
 
 	if (deleteResult.isErr()) {
+		await activityLog.logDelete({
+			entity: ENTITY.FILE,
+			severity: LOG_SEVERITY.ERROR,
+			description: `Failed to delete file '${fileId}' in manuscript '${manuscriptId}': ${deleteResult.error.message}`,
+			performedBy: request.userId as string,
+		})
+
 		return reply
 			.status(deleteResult.error.code)
 			.send(deleteResult.error.toObject())
 	}
+
+	await activityLog.logDelete({
+		entity: ENTITY.FILE,
+		severity: LOG_SEVERITY.INFO,
+		description: `File '${fileId}' deleted successfully from manuscript '${manuscriptId}'`,
+		performedBy: request.userId as string,
+	})
 
 	return reply.status(204).send()
 }
@@ -216,7 +278,13 @@ export const updloadManuscriptFile = async (
 	reply: FastifyReply,
 ): Promise<void> => {
 	const { id } = request.params
-	const { logger, auth, fileUploadService } = request.diScope.cradle
+	const {
+		logger,
+		auth,
+		fileUploadService,
+		activityLog,
+		manuscriptsRepository,
+	} = request.diScope.cradle
 
 	const activeMember = await auth.api.getActiveMember({
 		headers: fromNodeHeaders(request.headers),
@@ -224,6 +292,21 @@ export const updloadManuscriptFile = async (
 
 	if (!activeMember) {
 		const error = new PermissionsError()
+
+		return reply.status(error.code).send(error.toObject())
+	}
+
+	const exists = await manuscriptsRepository.existsById(id)
+
+	if (!exists) {
+		const error = new ManuscriptNotFoundError(id)
+
+		await activityLog.logUpload({
+			entity: ENTITY.FILE,
+			severity: LOG_SEVERITY.ERROR,
+			description: `Manuscript '${id}' not found for file upload`,
+			performedBy: request.userId as string,
+		})
 
 		return reply.status(error.code).send(error.toObject())
 	}
@@ -243,8 +326,22 @@ export const updloadManuscriptFile = async (
 	if (result.isErr()) {
 		logger.error(`Failed to upload file for manuscript '${id}'`)
 
+		await activityLog.logUpload({
+			entity: ENTITY.FILE,
+			severity: LOG_SEVERITY.ERROR,
+			description: `Failed to upload file '${file.filename || 'untitled'}' to manuscript '${id}': ${result.error.message}`,
+			performedBy: request.userId as string,
+		})
+
 		return reply.status(result.error.code).send(result.error.toObject())
 	}
+
+	await activityLog.logUpload({
+		entity: ENTITY.FILE,
+		severity: LOG_SEVERITY.INFO,
+		description: `File '${file.filename || 'untitled'}' uploaded successfully to manuscript '${id}'`,
+		performedBy: request.userId as string,
+	})
 
 	return reply.status(204).send()
 }

@@ -14,6 +14,8 @@ import type {
 	GetCommentParams,
 	UpdateComment,
 } from '../schemas/index.js'
+import { ENTITY } from '@/core/constants/entities.js'
+import { LOG_SEVERITY } from '@/modules/activity-log/constants/index.js'
 
 export const getManuscriptComments = async (
 	request: FastifyRequest<{
@@ -23,7 +25,7 @@ export const getManuscriptComments = async (
 	reply: FastifyReply,
 ): Promise<void> => {
 	const { id } = request.params
-	const { cursor, limit = 20 } = request.query
+	const { cursor, limit } = request.query
 	const { commentsRepository, manuscriptsRepository, logger } =
 		request.diScope.cradle
 
@@ -122,8 +124,13 @@ export const createReply = async (
 ): Promise<void> => {
 	const { manuscriptId, commentId } = request.params
 	const { text } = request.body
-	const { commentsRepository, manuscriptsRepository, auth, logger } =
-		request.diScope.cradle
+	const {
+		commentsRepository,
+		manuscriptsRepository,
+		auth,
+		logger,
+		activityLog,
+	} = request.diScope.cradle
 
 	const activeMember = await auth.api.getActiveMember({
 		headers: fromNodeHeaders(request.headers),
@@ -160,8 +167,22 @@ export const createReply = async (
 	if (result.isErr()) {
 		logger.error(`Failed to create reply: ${result.error.message}`)
 
+		await activityLog.logInsert({
+			entity: ENTITY.COMMENT,
+			severity: LOG_SEVERITY.ERROR,
+			description: `Failed to create reply on comment ${commentId} by member ${activeMember.id}: ${result.error.message}`,
+			performedBy: request.userId as string,
+		})
+
 		return reply.status(result.error.code).send(result.error.toObject())
 	}
+
+	await activityLog.logInsert({
+		entity: ENTITY.COMMENT,
+		severity: LOG_SEVERITY.INFO,
+		description: `Reply created on comment ${commentId} by member ${activeMember.id}`,
+		performedBy: request.userId as string,
+	})
 
 	logger.info(
 		`Reply created on comment ${commentId} by member ${activeMember.id}`,
@@ -179,17 +200,31 @@ export const updateComment = async (
 ): Promise<void> => {
 	const { id } = request.params
 
-	const { commentsRepository, logger } = request.diScope.cradle
+	const { commentsRepository, logger, activityLog } = request.diScope.cradle
 
 	const result = await commentsRepository.updateById(id, request.body)
 
 	if (result.isErr()) {
 		logger.error(`Failed to update comment ${id}`)
 
+		await activityLog.logUpdate({
+			entity: ENTITY.COMMENT,
+			severity: LOG_SEVERITY.ERROR,
+			description: `Failed to update comment ${id}: ${result.error.message}`,
+			performedBy: request.userId as string,
+		})
+
 		return reply.status(result.error.code).send(result.error.toObject())
 	}
 
 	logger.info(`Comment ${id} updated`)
+
+	await activityLog.logUpdate({
+		entity: ENTITY.COMMENT,
+		severity: LOG_SEVERITY.INFO,
+		description: `Comment ${id} updated successfully`,
+		performedBy: request.userId as string,
+	})
 
 	return reply.status(204).send()
 }
@@ -199,11 +234,18 @@ export const deleteComment = async (
 	reply: FastifyReply,
 ): Promise<void> => {
 	const { id } = request.params
-	const { commentsRepository, logger } = request.diScope.cradle
+	const { commentsRepository, logger, activityLog } = request.diScope.cradle
 
 	await commentsRepository.deleteById(id)
 
 	logger.info(`Comment ${id} deleted`)
+
+	await activityLog.logDelete({
+		entity: ENTITY.COMMENT,
+		severity: LOG_SEVERITY.INFO,
+		description: `Comment ${id} deleted successfully`,
+		performedBy: request.userId as string,
+	})
 
 	return reply.status(204).send()
 }

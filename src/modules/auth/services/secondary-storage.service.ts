@@ -12,6 +12,7 @@ export class SecondaryStorageImpl implements SecondaryStorage {
 	async get(key: string) {
 		return this.redis.get(key)
 	}
+
 	async set(
 		key: string,
 		value: string,
