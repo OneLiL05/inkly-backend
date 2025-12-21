@@ -25,6 +25,15 @@ CREATE TABLE "activity_log" (
 	CONSTRAINT "check_activity_log_severity" CHECK ("activity_log"."severity" in ('info', 'warning', 'error', 'trace'))
 );
 --> statement-breakpoint
+CREATE TABLE "backup" (
+	"id" uuid PRIMARY KEY DEFAULT uuidv7() NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"file_name" varchar NOT NULL,
+	"size_in_bytes" integer NOT NULL,
+	"url" text NOT NULL,
+	CONSTRAINT "backup_fileName_unique" UNIQUE("file_name")
+);
+--> statement-breakpoint
 CREATE TABLE "comment" (
 	"id" uuid PRIMARY KEY DEFAULT uuidv7() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,

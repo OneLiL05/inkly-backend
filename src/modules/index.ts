@@ -6,6 +6,7 @@ import { getPublishingStagesRoutes } from './publishing-stages/routes/index.js'
 import { getTagsRoutes } from './tags/routes/index.js'
 import { getOrganizationRoutes } from './organizations/routes/index.js'
 import { getActivityLogRoutes } from './activity-log/routes/index.js'
+import { getAdminRoutes } from './admin/routes/index.js'
 
 export const getRoutes = (): Routes => {
 	return {
@@ -36,6 +37,7 @@ export const getRoutes = (): Routes => {
 			...getCommentsRoutes().routes,
 			...getPublishingStagesRoutes().routes,
 			...getActivityLogRoutes().routes,
+			...getAdminRoutes().routes,
 		],
 	}
 }
