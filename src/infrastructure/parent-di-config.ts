@@ -20,6 +20,8 @@ import type { ActivityLogModuleDependencies } from '@/modules/activity-log/types
 import { resolveActivityLogModule } from '@/modules/activity-log/index.js'
 import { resolveAdminModule } from '@/modules/admin/index.js'
 import type { AdminModuleDependencies } from '@/modules/admin/types/index.js'
+import { resolveAnalyticsModule } from '@/modules/analytics/index.js'
+import type { AnalyticsModuleDependencies } from '@/modules/analytics/types/index.js'
 
 type Dependencies = CommonDependencies &
 	AuthModuleDependencies &
@@ -29,7 +31,8 @@ type Dependencies = CommonDependencies &
 	CommentsModuleDependencies &
 	PublishingStagesModuleDependencies &
 	ActivityLogModuleDependencies &
-	AdminModuleDependencies
+	AdminModuleDependencies &
+	AnalyticsModuleDependencies
 
 type DiConfig = NameAndRegistrationPair<Dependencies>
 
@@ -47,6 +50,7 @@ export const registerDependencies = (
 		...resolvePublishingStagesModule(),
 		...resolveActivityLogModule(),
 		...resolveAdminModule(),
+		...resolveAnalyticsModule(),
 	}
 
 	diContainer.register(diConfig)
