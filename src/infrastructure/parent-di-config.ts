@@ -18,6 +18,8 @@ import { resolveCommonDiConfig } from './common-di-config.js'
 import { resolveOrganizationsModule } from '@/modules/organizations/index.js'
 import type { ActivityLogModuleDependencies } from '@/modules/activity-log/types/index.js'
 import { resolveActivityLogModule } from '@/modules/activity-log/index.js'
+import { resolveAdminModule } from '@/modules/admin/index.js'
+import type { AdminModuleDependencies } from '@/modules/admin/types/index.js'
 
 type Dependencies = CommonDependencies &
 	AuthModuleDependencies &
@@ -26,7 +28,8 @@ type Dependencies = CommonDependencies &
 	OrganizationsModuleDependencies &
 	CommentsModuleDependencies &
 	PublishingStagesModuleDependencies &
-	ActivityLogModuleDependencies
+	ActivityLogModuleDependencies &
+	AdminModuleDependencies
 
 type DiConfig = NameAndRegistrationPair<Dependencies>
 
@@ -43,6 +46,7 @@ export const registerDependencies = (
 		...resolveCommentsModule(),
 		...resolvePublishingStagesModule(),
 		...resolveActivityLogModule(),
+		...resolveAdminModule(),
 	}
 
 	diContainer.register(diConfig)

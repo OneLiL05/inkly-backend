@@ -1,5 +1,5 @@
 {
-	"id": "5bf8df90-b305-4c55-8469-d3a29eca6c72",
+	"id": "fcf601a1-53d5-4a88-8ce3-24ed618c6871",
 	"prevId": "00000000-0000-0000-0000-000000000000",
 	"version": "7",
 	"dialect": "postgresql",
@@ -255,6 +255,57 @@
 					"value": "\"activity_log\".\"severity\" in ('info', 'warning', 'error', 'trace')"
 				}
 			},
+			"isRLSEnabled": false
+		},
+		"public.backup": {
+			"name": "backup",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "uuidv7()"
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"file_name": {
+					"name": "file_name",
+					"type": "varchar",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"size_in_bytes": {
+					"name": "size_in_bytes",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"url": {
+					"name": "url",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"backup_fileName_unique": {
+					"name": "backup_fileName_unique",
+					"nullsNotDistinct": false,
+					"columns": ["file_name"]
+				}
+			},
+			"policies": {},
+			"checkConstraints": {},
 			"isRLSEnabled": false
 		},
 		"public.comment": {
