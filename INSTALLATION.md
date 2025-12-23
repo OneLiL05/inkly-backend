@@ -2,13 +2,7 @@
 
 ## Quick Start (Recommended)
 
-Install Inkly with a single command:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/OneLiL05/inkly-backend/main/install.sh -o install.sh
-```
-
-Or download and run locally:
+Download Inkly and run locally:
 
 ```bash
 wget https://raw.githubusercontent.com/OneLiL05/inkly-backend/main/install.sh

@@ -278,8 +278,6 @@ fi
 
 echo -e "${YELLOW}💾 Creating docker-compose.yml...${NC}"
 
-DOCKER_IMAGE=${DOCKER_IMAGE:-"onelil05/inkly-server:latest"}
-
 cat > docker-compose.yml << 'EOF'
 networks:
   dev:
