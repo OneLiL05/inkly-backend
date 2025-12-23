@@ -172,7 +172,7 @@ read_with_default() {
     local value
 
     if [ -n "$default" ]; then
-        read -p "$(echo -e ${YELLOW}${prompt}${NC} [${default}]: )" value
+        read -p "$(echo -e ${YELLOW}${prompt}${NC} [${default}]: ) " value
         echo "${value:-$default}"
     else
         read -p "$(echo -e ${YELLOW}${prompt}${NC}: )" value
@@ -186,7 +186,7 @@ read_password() {
     local value
 
     if [ -n "$default" ]; then
-        read -sp "$(echo -e ${YELLOW}${prompt}${NC} [auto-generated]: )" value
+        read -sp "$(echo -e ${YELLOW}${prompt}${NC} [auto-generated]: ) " value
         echo "" >&2
         echo "${value:-$default}"
     else
@@ -202,7 +202,7 @@ echo -e "${BLUE}═════════════════════�
 echo ""
 
 echo -e "${GREEN}📝 Basic Configuration:${NC}"
-PORT=$(read_with_default "Port for API" "3000")
+PORT=$(read_with_default "Port for API" "8080")
 ALLOWED_ORIGINS=$(read_with_default "Allowed origins (comma-separated)" "http://localhost:3000")
 echo ""
 
