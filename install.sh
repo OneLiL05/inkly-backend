@@ -187,11 +187,11 @@ read_password() {
 
     if [ -n "$default" ]; then
         read -sp "$(echo -e ${YELLOW}${prompt}${NC} [auto-generated]: )" value
-        echo ""
+        echo "" >&2
         echo "${value:-$default}"
     else
         read -sp "$(echo -e ${YELLOW}${prompt}${NC}: )" value
-        echo ""
+        echo "" >&2
         echo "$value"
     fi
 }
@@ -345,7 +345,7 @@ services:
 
   api:
     container_name: inkly-api
-    image: ${DOCKER_IMAGE}
+    image: onelil/inkly-server:latest
     restart: always
     ports:
       - '${PORT}:8080'

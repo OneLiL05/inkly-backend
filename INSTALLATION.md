@@ -5,13 +5,13 @@
 Install Inkly with a single command:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/OneLiL05/inkly-server/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/OneLiL05/inkly-backend/main/install.sh -o install.sh
 ```
 
 Or download and run locally:
 
 ```bash
-wget https://raw.githubusercontent.com/OneLiL05/inkly-server/main/install.sh
+wget https://raw.githubusercontent.com/OneLiL05/inkly-backend/main/install.sh
 chmod +x install.sh
 ./install.sh
 ```
