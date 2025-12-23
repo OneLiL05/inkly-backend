@@ -16,7 +16,7 @@ type FindByManuscriptArgs = FindPaginatedArgs<{
 interface CreatePublishingStageData extends CreatePublishingStage {
 	manuscriptId: string
 	createdBy: string
-	startedAt?: Date
+	createdAt?: Date
 }
 
 interface CheckStageOwnershipArgs {

@@ -13,6 +13,7 @@ export const getActivityLogRoutes = (): Routes => ({
 			handler: retrieveActivityLogs,
 			preHandler: [isAuthorized, isAdmin],
 			schema: {
+				summary: 'Retrieve activity logs',
 				description: 'Retrieve all activity logs',
 				tags: ['Admin'],
 				response: {
@@ -23,7 +24,7 @@ export const getActivityLogRoutes = (): Routes => ({
 						'User is not authorized',
 					),
 					403: generateFailedHttpResponse(403).describe(
-						`User doesnt have  rights to retrieve activity logs`,
+						`User does not have rights to retrieve activity logs`,
 					),
 				},
 			},

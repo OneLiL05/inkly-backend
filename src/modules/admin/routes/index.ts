@@ -14,10 +14,11 @@ export const getAdminRoutes = (): Routes => ({
 	routes: [
 		{
 			method: 'POST',
-			url: '/admin/backup',
+			url: '/admin/backups',
 			handler: createBackup,
 			preHandler: [isAuthorized, isAdmin],
 			schema: {
+				summary: 'Create database backup',
 				description: 'Create a full database backup and upload to S3',
 				tags: ['Admin'],
 				response: {
@@ -36,10 +37,11 @@ export const getAdminRoutes = (): Routes => ({
 		},
 		{
 			method: 'GET',
-			url: '/admin/backup',
+			url: '/admin/backups',
 			handler: listBackups,
 			preHandler: [isAuthorized, isAdmin],
 			schema: {
+				summary: 'Retrieve list of database backups',
 				description: 'List all database backups',
 				tags: ['Admin'],
 				response: {
@@ -55,10 +57,11 @@ export const getAdminRoutes = (): Routes => ({
 		},
 		{
 			method: 'POST',
-			url: '/admin/backup/:fileName/restore',
+			url: '/admin/backups/:fileName/restore',
 			handler: restoreBackup,
 			preHandler: [isAuthorized, isAdmin],
 			schema: {
+				summary: 'Restore database from backup',
 				description: 'Restore database from a specific backup',
 				tags: ['Admin'],
 				params: RestoreParamsSchema,

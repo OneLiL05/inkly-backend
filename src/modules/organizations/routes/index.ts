@@ -8,13 +8,14 @@ import {
 	generateFailedHttpResponse,
 	generateFailedValidationResponse,
 } from '@/core/utils/schemas.js'
-import { ManuscriptModelSchema } from '@/modules/manuscripts/schemas/index.js'
 import { TagSchema } from '@/modules/tags/schemas/index.js'
 import {
 	getOrganizationManuscripts,
 	getOrganizationTags,
 } from '../handlers/index.js'
 import { GetOrganizationSchema } from '../schemas/index.js'
+import { ManuscriptModelSchema } from '@/modules/manuscripts/schemas/index.js'
+import { schemaWithTags } from '@/modules/tags/utils/index.js'
 
 export const getOrganizationRoutes = () => ({
 	routes: [
@@ -31,7 +32,9 @@ export const getOrganizationRoutes = () => ({
 				params: GetOrganizationSchema,
 				querystring: PaginationQuerySchema,
 				response: {
-					200: buildPaginatedSchema(ManuscriptModelSchema).describe(
+					200: buildPaginatedSchema(
+						schemaWithTags(ManuscriptModelSchema),
+					).describe(
 						'Manuscripts retrieved successfully with nextCursor for infinite scroll',
 					),
 					400: generateFailedValidationResponse().describe(

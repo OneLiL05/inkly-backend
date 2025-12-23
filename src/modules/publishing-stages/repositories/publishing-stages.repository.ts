@@ -62,7 +62,14 @@ export class PublishingStagesRepositoryImpl
 		data: CreatePublishingStageData,
 	): Promise<Result<PublishingStage, HttpError>> {
 		try {
-			const { deadlineAt, description, name, manuscriptId, createdBy } = data
+			const {
+				deadlineAt,
+				description,
+				name,
+				manuscriptId,
+				createdBy,
+				completedBy,
+			} = data
 
 			const rows = await this.db
 				.insert(publishingStageTable)
@@ -72,7 +79,7 @@ export class PublishingStagesRepositoryImpl
 					deadlineAt: deadlineAt ? new Date(deadlineAt) : null,
 					manuscriptId,
 					createdBy,
-					createdAt: new Date(),
+					completedBy,
 				})
 				.returning()
 

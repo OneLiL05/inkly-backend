@@ -69,15 +69,3 @@ export const getMonteCarloSimulations = async (
 
 	return reply.status(200).send(result)
 }
-
-export const getFullAnalyticsReport = async (
-	request: FastifyRequest<{ Params: OrgParams }>,
-	reply: FastifyReply,
-): Promise<void> => {
-	const { analyticsService } = request.diScope.cradle
-	const { organizationId } = request.params
-
-	const result = await analyticsService.getFullReport(organizationId)
-
-	return reply.status(200).send(result)
-}

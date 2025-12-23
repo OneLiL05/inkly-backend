@@ -25,6 +25,7 @@ import {
 	ManuscriptModelSchema,
 	UpdateManuscriptSchema,
 } from '../schemas/index.js'
+import { schemaWithTags } from '@/modules/tags/utils/index.js'
 
 export const getManuscriptsRoutes = (): Routes => ({
 	routes: [
@@ -71,7 +72,7 @@ export const getManuscriptsRoutes = (): Routes => ({
 				tags: ['Manuscripts'],
 				params: GetManuscriptParamsSchema,
 				response: {
-					200: ManuscriptModelSchema.describe(
+					200: schemaWithTags(ManuscriptModelSchema).describe(
 						'Manuscript retrieved successfully',
 					),
 					400: generateFailedValidationResponse().describe(

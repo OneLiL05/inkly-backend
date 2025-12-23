@@ -62,7 +62,7 @@ export const initBetterAuth = (deps: AuthInjectableDependencies) => {
 			database: {
 				generateId: 'uuid',
 			},
-			disableOriginCheck: nodeENV !== 'production',
+			disableOriginCheck: true,
 		},
 		plugins: [
 			username(),
@@ -120,8 +120,8 @@ export const initBetterAuth = (deps: AuthInjectableDependencies) => {
 				}
 			}),
 		},
-		experimental: {
-			joins: true,
-		},
+		// experimental: {
+		// 	joins: true,
+		// },
 	})
 }

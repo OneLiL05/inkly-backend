@@ -110,6 +110,7 @@ export const createPublishingStage = async (
 		...request.body,
 		manuscriptId: id,
 		createdBy: activeMember.id,
+		completedBy: request.body.completedBy ?? activeMember.id,
 	})
 
 	if (result.isErr()) {
@@ -135,6 +136,8 @@ export const createPublishingStage = async (
 		description: `Publishing stage created on manuscript '${id}'`,
 		performedBy: request.userId as string,
 	})
+
+	console.log(result.value)
 
 	return reply.status(201).send(result.value)
 }

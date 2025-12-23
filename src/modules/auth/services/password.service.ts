@@ -9,7 +9,7 @@ export class PasswordServiceImpl implements PasswordService {
 		parallelism: 1,
 	} as const
 
-	async generateHash(password: string): Promise<string> {
+	async hash(password: string): Promise<string> {
 		return hash(password, PasswordServiceImpl.HASHING_PARAMS)
 	}
 

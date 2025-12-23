@@ -8,7 +8,7 @@ const PublishingStageSchema = z.object({
 	id: z.uuidv7().describe('Unique identifier of the publishing stage'),
 	name: z.string().min(1).max(255).describe('Name of the publishing stage'),
 	description: z.string().nullable().describe('Description of the stage'),
-	startedAt: z.coerce.date().describe('When the stage started'),
+	createdAt: z.coerce.date().describe('When the stage started'),
 	finishedAt: z.coerce
 		.date()
 		.nullable()
@@ -53,6 +53,10 @@ const CreatePublishingStageSchema = z.object({
 		.datetime()
 		.optional()
 		.describe('Optional deadline for the stage'),
+	completedBy: z
+		.uuidv7()
+		.optional()
+		.describe('Member ID who completed the stage'),
 })
 
 const UpdatePublishingStageSchema =

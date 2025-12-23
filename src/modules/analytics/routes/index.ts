@@ -1,23 +1,21 @@
+import { isAuthorized } from '@/core/middlewares/is-authorized.middleware.js'
 import type { Routes } from '@/core/types/routes.js'
+import { generateFailedHttpResponse } from '@/core/utils/schemas.js'
 import {
-	getTransitionMatrix,
 	getActivityAnomalies,
 	getDeadlinePredictions,
 	getMonteCarloSimulations,
-	getFullAnalyticsReport,
+	getTransitionMatrix,
 } from '../handlers/index.js'
-import { isAuthorized } from '@/core/middlewares/is-authorized.middleware.js'
 import {
-	OrganizationParamsSchema,
-	TransitionMatrixSchema,
-	AnomalyQuerySchema,
 	ActivityAnomalyReportSchema,
+	AnomalyQuerySchema,
 	DeadlinePredictionsListSchema,
-	SimulationQuerySchema,
 	MonteCarloReportSchema,
-	AnalyticsReportSchema,
+	OrganizationParamsSchema,
+	SimulationQuerySchema,
+	TransitionMatrixSchema,
 } from '../schemas/index.js'
-import { generateFailedHttpResponse } from '@/core/utils/schemas.js'
 
 export const getAnalyticsRoutes = (): Routes => ({
 	routes: [
@@ -27,6 +25,7 @@ export const getAnalyticsRoutes = (): Routes => ({
 			handler: getTransitionMatrix,
 			preHandler: [isAuthorized],
 			schema: {
+				summary: 'Get Markov chain transition matrix',
 				description:
 					'Get Markov chain transition matrix for manuscript status changes',
 				tags: ['Analytics'],
@@ -47,6 +46,7 @@ export const getAnalyticsRoutes = (): Routes => ({
 			handler: getActivityAnomalies,
 			preHandler: [isAuthorized],
 			schema: {
+				summary: 'Detect activity anomalies',
 				description: 'Detect activity anomalies using Poisson process analysis',
 				tags: ['Analytics'],
 				params: OrganizationParamsSchema,
@@ -67,6 +67,7 @@ export const getAnalyticsRoutes = (): Routes => ({
 			handler: getDeadlinePredictions,
 			preHandler: [isAuthorized],
 			schema: {
+				summary: 'Get Bayesian deadline predictions',
 				description: 'Get Bayesian deadline predictions for all manuscripts',
 				tags: ['Analytics'],
 				params: OrganizationParamsSchema,
@@ -86,6 +87,7 @@ export const getAnalyticsRoutes = (): Routes => ({
 			handler: getMonteCarloSimulations,
 			preHandler: [isAuthorized],
 			schema: {
+				summary: 'Monte Carlo simulations for project completion estimates',
 				description:
 					'Run Monte Carlo simulations for project completion estimates',
 				tags: ['Analytics'],
@@ -95,23 +97,6 @@ export const getAnalyticsRoutes = (): Routes => ({
 					200: MonteCarloReportSchema.describe(
 						'Monte Carlo simulation results with percentiles',
 					),
-					401: generateFailedHttpResponse(401).describe(
-						'User is not authorized',
-					),
-				},
-			},
-		},
-		{
-			method: 'GET',
-			url: '/organizations/:organizationId/analytics',
-			handler: getFullAnalyticsReport,
-			preHandler: [isAuthorized],
-			schema: {
-				description: 'Get full analytics report combining all analysis methods',
-				tags: ['Analytics'],
-				params: OrganizationParamsSchema,
-				response: {
-					200: AnalyticsReportSchema.describe('Complete analytics report'),
 					401: generateFailedHttpResponse(401).describe(
 						'User is not authorized',
 					),

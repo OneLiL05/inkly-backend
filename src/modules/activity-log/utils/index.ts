@@ -11,10 +11,11 @@ export const createActivityLog = (deps: CommonDependencies): ActivityLog => {
 			.slice(1)
 			.toLowerCase()}` as keyof ActivityLog
 
-		acc[key] = async (data: LogData): Promise<void> => {
+		acc[key] = async ({ performedBy, ...rest }: LogData): Promise<void> => {
 			await db.insert(activityLogTable).values({
 				action,
-				...data,
+				userId: performedBy,
+				...rest,
 			})
 		}
 

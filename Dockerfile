@@ -21,6 +21,8 @@ RUN node --run build
 
 FROM base
 
+RUN apk add --no-cache postgresql-client
+
 COPY --from=build /app/dist /app/dist
 COPY --from=build /app/node_modules /app/node_modules
 COPY --from=build /app/migrations /app/migrations

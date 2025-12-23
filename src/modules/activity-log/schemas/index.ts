@@ -4,9 +4,7 @@ import { ACTIVITY_ACTION, LOG_SEVERITY } from '../constants/index.js'
 
 export const ActivityLogSchema = z.object({
 	id: z.uuidv7().describe('Unique identifier for the activity log'),
-	performedAt: z.iso
-		.datetime()
-		.describe('Timestamp when the activity was performed'),
+	performedAt: z.date().describe('Timestamp when the activity was performed'),
 	entity: z
 		.enum(Object.values(ENTITY))
 		.describe('The entity on which the action was performed'),

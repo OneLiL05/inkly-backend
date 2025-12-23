@@ -9,6 +9,8 @@ export const isAdmin = async (request: FastifyRequest, reply: FastifyReply) => {
 		headers: fromNodeHeaders(request.headers),
 	})
 
+	console.log(session)
+
 	if (session?.user.role !== 'admin') {
 		const error = new PermissionsError()
 

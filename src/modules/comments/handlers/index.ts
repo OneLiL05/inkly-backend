@@ -75,8 +75,13 @@ export const createComment = async (
 ): Promise<void> => {
 	const { id } = request.params
 	const { text } = request.body
-	const { commentsRepository, manuscriptsRepository, auth, logger } =
-		request.diScope.cradle
+	const {
+		commentsRepository,
+		manuscriptsRepository,
+		auth,
+		logger,
+		activityLog,
+	} = request.diScope.cradle
 
 	const activeMember = await auth.api.getActiveMember({
 		headers: fromNodeHeaders(request.headers),
@@ -105,12 +110,27 @@ export const createComment = async (
 
 	if (result.isErr()) {
 		logger.error(`Failed to create comment: ${result.error.message}`)
+
+		await activityLog.logInsert({
+			entity: ENTITY.COMMENT,
+			severity: LOG_SEVERITY.ERROR,
+			description: `Failed to create a comment by member ${activeMember.id}: ${result.error.message}`,
+			performedBy: request.userId as string,
+		})
+
 		return reply.status(result.error.code).send(result.error.toObject())
 	}
 
 	logger.info(
 		`Comment created on manuscript ${id} by member ${activeMember.id}`,
 	)
+
+	await activityLog.logInsert({
+		entity: ENTITY.COMMENT,
+		severity: LOG_SEVERITY.INFO,
+		description: `Comment created on manuscript ${id} by member ${activeMember.id}`,
+		performedBy: request.userId as string,
+	})
 
 	return reply.status(201).send(result.value)
 }

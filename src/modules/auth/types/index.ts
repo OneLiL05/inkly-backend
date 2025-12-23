@@ -10,7 +10,7 @@ interface VerifyPasswordArgs {
 }
 
 interface PasswordService {
-	generateHash: (password: string) => Promise<string>
+	hash: (password: string) => Promise<string>
 	verify: (data: VerifyPasswordArgs) => Promise<boolean>
 }
 interface AuthModuleDependencies {

@@ -8,5 +8,7 @@ export const retrieveActivityLogs = async (
 
 	const logs = await activityLogRepository.retirieveAll()
 
+	console.log(logs)
+
 	await reply.send(logs)
 }
